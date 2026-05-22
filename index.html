@@ -1,431 +1,49 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2026 WCC Baseball Tournament — Bracket</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bone:#FAFAF8;
-    --ink:#111111;
-    --line:#1a1a1a;
-    --muted:#6a6a68;
-    --rule:#dcdcd6;
-    --paper:#f3f1ea;
-    --pac-orange:#F47A20;
-    --pac-black:#000000;
-    --kop:#9B1B1B;
-    --win:#1f6f3a;
-    --pending:#b8b8b2;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bone);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  .page{max-width:1280px;margin:0 auto;padding:32px 28px 64px}
-  /* masthead */
-  .masthead{border-top:6px solid var(--ink);border-bottom:1px solid var(--ink);padding:18px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
-  .title-wrap{display:flex;align-items:center;gap:24px;flex-wrap:nowrap}
-  .wcc-logo{height:clamp(48px,7vw,76px);width:auto;display:block;flex-shrink:0}
-  .title{font-family:'DM Serif Display',serif;font-size:clamp(34px,5.4vw,64px);line-height:.95;letter-spacing:-0.01em;margin:0}
-  .title .dot{color:var(--pac-orange)}
-  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-  .meta{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);text-align:right;line-height:1.7}
-  .meta b{color:var(--pac-orange)}
-  /* deck */
-  .deck{margin:18px 0 22px;padding:14px 18px;background:var(--paper);border-left:3px solid var(--pac-orange);font-size:14.5px;line-height:1.55;color:#2a2a28}
-  .deck b{font-weight:700}
-  /* stat line */
-  .stat-line{margin:0 0 28px}
-  .stat-line-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;border-bottom:1px solid var(--ink);padding-bottom:10px;margin-bottom:14px}
-  .sl-kicker{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-  .sl-title{font-family:'DM Serif Display',serif;font-size:clamp(22px,2.6vw,30px);line-height:1;letter-spacing:-0.01em;margin:0}
-  .sl-title .dot{color:var(--pac-orange)}
-  .sl-meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);text-align:right;line-height:1.7}
-  .sl-meta b{color:var(--pac-orange)}
-  .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-  .stat{background:#fff;border:1px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:14px 14px 12px;position:relative;overflow:hidden}
-  .stat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pac-orange);opacity:0;transition:opacity .2s}
-  .stat:hover::after{opacity:1}
-  .stat-label{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-  .stat-value{font-family:'DM Serif Display',serif;font-size:clamp(32px,4.2vw,46px);line-height:1;color:var(--ink);letter-spacing:-0.02em;display:flex;align-items:baseline}
-  .stat-value .num{color:var(--pending);transition:color .2s}
-  .stat[data-filled="true"] .stat-value .num{color:var(--ink)}
-  .stat-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dotted var(--rule)}
-  /* live + sync indicators */
-  .live-dot{display:inline-block;margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.18em;color:var(--kop);font-weight:700;animation:pulse 1.6s ease-in-out infinite;vertical-align:middle}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  .sync{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:none;letter-spacing:.04em}
-  .sync.err{color:var(--kop)}
-  .sync.ok{color:var(--win)}
-  /* stat fill flash on update */
-  .stat.flash{animation:flash 1s ease-out}
-  @keyframes flash{0%{background:#fff7ed}100%{background:#fff}}
-  /* debug + manual entry panel */
-  .debug-panel{margin:0 0 22px;border:1px dashed #b8b8b2;background:#fbfbf7;padding:0 14px}
-  .debug-panel summary{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:10px 0;cursor:pointer;outline:none}
-  .debug-panel[open] summary{border-bottom:1px solid var(--rule);margin-bottom:12px}
-  .debug-body{padding-bottom:14px}
-  .manual-entry{margin-bottom:14px}
-  .me-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);font-weight:600;margin-bottom:8px}
-  .me-row{display:flex;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px}
-  .me-row label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
-  .me-row input{font-family:'JetBrains Mono',monospace;font-size:13px;width:56px;padding:4px 6px;border:1px solid var(--ink);background:#fff;border-radius:0}
-  .me-row input[type="text"]{width:80px}
-  .me-actions{display:flex;gap:8px;flex-wrap:wrap}
-  .me-actions button{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;background:#fff;border:1px solid var(--ink);box-shadow:2px 2px 0 var(--ink);cursor:pointer}
-  .me-actions button:hover{background:var(--pac-orange);color:#fff}
-  .me-actions button:active{transform:translate(2px,2px);box-shadow:none}
-  .dbg-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;padding-top:10px;border-top:1px dotted var(--rule)}
-  .dbg-log{font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.5;color:#2a2a28;background:#fff;border:1px solid var(--rule);padding:10px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:0}
-  /* legend */
-  .legend{display:flex;gap:18px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-  .legend span{display:inline-flex;align-items:center;gap:6px}
-  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px}
-  .sw-win{background:var(--win)}
-  .sw-loss{background:#cfcfca}
-  .sw-pending{background:var(--pending)}
-  .sw-jt{background:var(--pac-orange)}
-  /* bracket */
-  .bracket{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;align-items:start;position:relative}
-  .col-head{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--rule);margin-bottom:14px}
-  .col-head b{color:var(--ink);font-weight:700}
-  .col{display:flex;flex-direction:column;gap:22px}
-  .col.upper-r2{justify-content:flex-start;padding-top:0}
-  .col.upper-final{padding-top:28px}
-  .col.champ{padding-top:88px}
-  .col.elim{padding-top:0}
-  /* game card */
-  .game{background:#fff;border:1px solid var(--ink);box-shadow:3px 3px 0 var(--ink);position:relative;transition:transform .12s ease, box-shadow .12s ease}
-  .game[data-eid]:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--pac-orange)}
-  .game[data-eid]:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
-  .game.pending{border-color:#9a9a94;box-shadow:3px 3px 0 #cfcfca;background:#fbfbf7}
-  .game-hd{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid var(--rule);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-  .game-hd .gnum{color:var(--ink);font-weight:600}
-  .team{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid var(--rule)}
-  .team:last-child{border-bottom:none}
-  .seed{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--muted);text-align:center}
-  .name{font-weight:600;font-size:14.5px;letter-spacing:-0.005em}
-  .score{font-family:'DM Serif Display',serif;font-size:22px;line-height:1;color:var(--ink);min-width:24px;text-align:right}
-  .score.dim{color:#bdbdb8}
-  .team.win .name{color:var(--win)}
-  .team.win .seed{color:var(--win)}
-  .team.loss{opacity:.55}
-  .team.loss .name{text-decoration:line-through;text-decoration-color:#bdbdb8;text-decoration-thickness:1px}
-  .team.tbd .name{color:var(--muted);font-style:italic;font-weight:500}
-  .team.tbd .score{color:transparent}
-  /* JT highlight */
-  .team.jt{position:relative;background:linear-gradient(90deg,rgba(244,122,32,0.10),rgba(244,122,32,0) 70%)}
-  .team.jt::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pac-orange)}
-  .jt-tag{position:absolute;top:-9px;right:-9px;background:var(--pac-orange);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.14em;padding:3px 7px;border:1px solid var(--ink);box-shadow:2px 2px 0 var(--ink);text-transform:uppercase;z-index:2}
-  /* champion card */
-  .champ-card{background:var(--ink);color:var(--bone);padding:18px 16px;text-align:center;border:1px solid var(--ink);box-shadow:4px 4px 0 var(--pac-orange);position:relative}
-  .champ-card .label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#bdbdb8;margin-bottom:10px}
-  .champ-card .trophy{font-family:'DM Serif Display',serif;font-size:38px;line-height:1;margin-bottom:10px;color:var(--pac-orange)}
-  .champ-card .who{font-size:13px;color:#dcdcd6;font-style:italic}
-  /* eliminated rail */
-  .elim-card{background:#fff;border:1px dashed #b8b8b2;padding:10px 12px}
-  .elim-card .ehd{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-  .elim-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:4px 0;border-bottom:1px dotted var(--rule)}
-  .elim-row:last-child{border-bottom:none}
-  .elim-row .nm{text-decoration:line-through;text-decoration-color:#b8b8b2;color:#6a6a68}
-  .elim-row .sd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
-  /* note */
-  .note{margin-top:28px;padding-top:18px;border-top:1px solid var(--rule);display:grid;grid-template-columns:repeat(3,1fr);gap:24px;font-size:13.5px;color:#2a2a28;line-height:1.55}
-  .note h4{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-  .footer{margin-top:36px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;border-top:1px solid var(--ink);padding-top:10px}
-  /* responsive */
-  @media (max-width: 1024px){
-    .bracket{grid-template-columns:repeat(2,1fr);gap:18px}
-    .col.champ{padding-top:0}
-    .col.upper-final{padding-top:0}
-    .col-head{margin-bottom:8px}
-    .stat-grid{grid-template-columns:repeat(3,1fr)}
-  }
-  @media (max-width: 560px){
-    .bracket{grid-template-columns:1fr}
-    .meta{text-align:left}
-    .note{grid-template-columns:1fr}
-    .stat-grid{grid-template-columns:repeat(2,1fr)}
-    .sl-meta{text-align:left}
-  }
-</style>
-</head>
-<body>
-<div class="page">
-
-  <header class="masthead">
-    <div class="title-wrap">
-      <div>
-        <div class="kicker">2026 West Coast Conference Baseball Championship</div>
-        <h1 class="title">Road to Regionals<span class="dot">.</span></h1>
-      </div>
-      <img class="wcc-logo" src="wcc-logo.png" alt="West Coast Conference">
-    </div>
-    <div class="meta">
-      May 20–23, 2026<br>
-      Scottsdale Stadium · Scottsdale, AZ<br>
-      Format: <b>First round knockout, double elimination</b> · 6 teams
-    </div>
-  </header>
-
-  <div class="deck">
-    <b>Tracking JT &amp; the Pacific Tigers</b> — No. 2 seed, first-round bye. Pacific clinched 2nd place in the WCC for the first time in more than half a century; first postseason appearance in 28 years. Tigers open vs. No. 3 San Francisco tonight at 7:00 PM PT (ESPN+).
-  </div>
-
-  <section class="stat-line" aria-label="JT — Tournament running totals">
-    <div class="stat-line-hd">
-      <div>
-        <div class="sl-kicker">JT Shank · Pacific Tigers <span id="liveDot" class="live-dot" hidden>● LIVE</span></div>
-        <div class="sl-title">Tournament line<span class="dot">.</span></div>
-      </div>
-      <div class="sl-meta">
-        Running totals · auto-updates from ESPN<br>
-        Through: <b id="thruLabel">Pre-Game 4</b> · <span id="gpLabel">0</span> GP
-        · <span id="lastSync" class="sync">syncing…</span>
-      </div>
-    </div>
-
-    <div class="stat-grid">
-      <article class="stat" data-stat="avg" id="card-avg">
-        <div class="stat-label">AVG</div>
-        <div class="stat-value"><span class="num" id="val-avg">.---</span></div>
-        <div class="stat-sub"><span id="sub-avg">— for —</span></div>
-      </article>
-
-      <article class="stat" data-stat="r" id="card-r">
-        <div class="stat-label">R</div>
-        <div class="stat-value"><span class="num" id="val-r">0</span></div>
-        <div class="stat-sub"><span id="sub-r">runs scored</span></div>
-      </article>
-
-      <article class="stat" data-stat="rbi" id="card-rbi">
-        <div class="stat-label">RBI</div>
-        <div class="stat-value"><span class="num" id="val-rbi">0</span></div>
-        <div class="stat-sub"><span id="sub-rbi">runs batted in</span></div>
-      </article>
-
-      <article class="stat" data-stat="hr" id="card-hr">
-        <div class="stat-label">HR</div>
-        <div class="stat-value"><span class="num" id="val-hr">0</span></div>
-        <div class="stat-sub"><span id="sub-hr">home runs</span></div>
-      </article>
-
-      <article class="stat" data-stat="obp" id="card-obp">
-        <div class="stat-label">OBP</div>
-        <div class="stat-value"><span class="num" id="val-obp">.---</span></div>
-        <div class="stat-sub"><span id="sub-obp">on-base %</span></div>
-      </article>
-
-      <article class="stat" data-stat="ops" id="card-ops">
-        <div class="stat-label">OPS</div>
-        <div class="stat-value"><span class="num" id="val-ops">.---</span></div>
-        <div class="stat-sub"><span id="sub-ops">OBP + SLG</span></div>
-      </article>
-    </div>
-  </section>
-
-  <details class="debug-panel">
-    <summary>Diagnostics &amp; manual entry</summary>
-    <div class="debug-body">
-      <div class="manual-entry">
-        <div class="me-title">Manual entry — paste JT's box line</div>
-        <div class="me-row">
-          <label>Game vs. <input id="me-opp" type="text" placeholder="USF" maxlength="6"></label>
-          <label>AB <input id="me-ab" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>H <input id="me-h" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>R <input id="me-r" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>RBI <input id="me-rbi" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>HR <input id="me-hr" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>2B <input id="me-2b" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>3B <input id="me-3b" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>BB <input id="me-bb" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>HBP <input id="me-hbp" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>SF <input id="me-sf" type="number" min="0" value="0" inputmode="numeric"></label>
-        </div>
-        <div class="me-actions">
-          <button id="me-save" type="button">Save game</button>
-          <button id="me-clear" type="button">Reset all</button>
-          <button id="me-resync" type="button">Resync from ESPN</button>
-        </div>
-      </div>
-      <div class="dbg-title">Live sync log (most recent at bottom)</div>
-      <pre id="dbgLog" class="dbg-log">waiting for first sync…</pre>
-    </div>
-  </details>
-
-  <div class="legend" aria-label="Legend">
-    <span><i class="swatch sw-jt"></i> JT / Pacific</span>
-    <span><i class="swatch sw-win"></i> Winner</span>
-    <span><i class="swatch sw-loss"></i> Eliminated</span>
-    <span><i class="swatch sw-pending"></i> Pending</span>
-  </div>
-
-  <section class="bracket" aria-label="Bracket">
-
-    <!-- COL 1: Round 1 (Wed May 20) -->
-    <div class="col">
-      <div class="col-head"><b>Round 1</b> · Wed May 20</div>
-
-      <div class="game" data-teams="santa clara|san francisco">
-        <div class="game-hd"><span class="gnum">Game 1</span><span>2:00 PT · ESPN+</span></div>
-        <div class="team loss">
-          <div class="seed">6</div><div class="name">Santa Clara</div><div class="score">4</div>
-        </div>
-        <div class="team win">
-          <div class="seed">3</div><div class="name">San Francisco</div><div class="score">10</div>
-        </div>
-      </div>
-
-      <div class="game" data-teams="pepperdine|saint mary's">
-        <div class="game-hd"><span class="gnum">Game 2</span><span>7:00 PT · ESPN+</span></div>
-        <div class="team loss">
-          <div class="seed">4</div><div class="name">Pepperdine</div><div class="score">2</div>
-        </div>
-        <div class="team win">
-          <div class="seed">5</div><div class="name">Saint Mary's</div><div class="score">9</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- COL 2: Upper Round 2 (Thu May 21) -->
-    <div class="col upper-r2">
-      <div class="col-head"><b>Upper R2</b> · Thu May 21</div>
-
-      <div class="game pending" data-teams="gonzaga|saint mary's">
-        <div class="game-hd"><span class="gnum">Game 3</span><span>2:00 PT · ESPN+</span></div>
-        <div class="team">
-          <div class="seed">1</div><div class="name">Gonzaga</div><div class="score dim">—</div>
-        </div>
-        <div class="team">
-          <div class="seed">5</div><div class="name">Saint Mary's</div><div class="score dim">—</div>
-        </div>
-      </div>
-
-      <div class="game pending" data-teams="pacific|san francisco">
-        <span class="jt-tag">JT</span>
-        <div class="game-hd"><span class="gnum">Game 4</span><span>7:00 PT · ESPN+</span></div>
-        <div class="team jt">
-          <div class="seed">2</div><div class="name">Pacific</div><div class="score dim">—</div>
-        </div>
-        <div class="team">
-          <div class="seed">3</div><div class="name">San Francisco</div><div class="score dim">—</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- COL 3: Friday — Elim + Winners -->
-    <div class="col">
-      <div class="col-head"><b>Friday</b> · May 22</div>
-
-      <div class="game pending">
-        <div class="game-hd"><span class="gnum">Game 5 · Elim</span><span>10:00 PT · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G3 loser</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G4 loser</div><div class="score">—</div></div>
-      </div>
-
-      <div class="game pending">
-        <div class="game-hd"><span class="gnum">Game 6 · Winners</span><span>2:00 PT · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G3 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G4 winner</div><div class="score">—</div></div>
-      </div>
-
-      <div class="game pending">
-        <div class="game-hd"><span class="gnum">Game 7 · Elim</span><span>7:00 PT · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G5 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G6 loser</div><div class="score">—</div></div>
-      </div>
-    </div>
-
-    <!-- COL 4: Saturday Final(s) -->
-    <div class="col upper-final">
-      <div class="col-head"><b>Final(s)</b> · Sat May 23</div>
-
-      <div class="game pending">
-        <div class="game-hd"><span class="gnum">Game 8 · Championship</span><span>1:00 PT · ESPNU</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G6 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G7 winner</div><div class="score">—</div></div>
-      </div>
-
-      <div class="game pending" style="margin-top:8px">
-        <div class="game-hd"><span class="gnum">Game 9 · If necessary</span><span>TBD · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G8 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G8 loser</div><div class="score">—</div></div>
-      </div>
-    </div>
-
-    <!-- COL 5: Champion + Eliminated rail -->
-    <div class="col champ">
-      <div class="col-head"><b>NCAA Bid</b></div>
-      <div class="champ-card">
-        <div class="label">Tournament Champion</div>
-        <div class="trophy">★</div>
-        <div class="who">Automatic bid to the 2026 NCAA D-I Tournament</div>
-      </div>
-
-      <div class="elim-card" style="margin-top:18px">
-        <div class="ehd">Eliminated</div>
-        <div class="elim-row"><span class="nm">Santa Clara</span><span class="sd">6 · L 4–10</span></div>
-        <div class="elim-row"><span class="nm">Pepperdine</span><span class="sd">4 · L 2–9</span></div>
-      </div>
-    </div>
-
-  </section>
-
-  <section class="note">
-    <div>
-      <h4>Format</h4>
-      Six teams. Seeds 1–2 receive byes into the double-elimination bracket. Seeds 3 vs. 6 and 4 vs. 5 play single-elimination Round 1. A team must lose twice to be out.
-    </div>
-    <div>
-      <h4>Pacific's Path</h4>
-      Win Game 4 → Winners' bracket Friday (G6). Lose Game 4 → drop to elimination side (G5 Friday morning) and must win out. Possible "if necessary" finale Saturday evening.
-    </div>
-    <div>
-      <h4>JT — Watch list</h4>
-      Starting OF for Pacific. First game tonight, 7:00 PT vs. USF at Scottsdale Stadium. Reception for Pacific community at 6:00 PT per the university.
-    </div>
-  </section>
-
-  <div class="footer">
-    <span>Bracket · 2026 WCC Baseball Championship</span>
-    <span>Updated Thu May 21 · pre-Game 3</span>
-  </div>
-
-</div>
 <script>
 /* =====================================================================
    WCC bracket live wiring — JT (#27, Pacific) tournament running totals
-   Pulls from ESPN's undocumented college-baseball API.
-   - Finds Pacific's games during the tournament window (May 20–24, 2026)
-   - Pulls box scores, locates jersey #27 on Pacific's batting line
-   - Accumulates raw counters (AB, H, R, RBI, HR, BB, HBP, SF, TB)
-   - Recomputes AVG / OBP / SLG / OPS from counters (never sums rates)
-   - Persists per-eventId so reloads/restarts don't double-count
+   Refactored for concurrency, DOM caching, and streamlined state logic.
    ===================================================================== */
 (function(){
-  // Match by displayName (ESPN doesn't carry jerseys for college baseball).
-  // Pattern matches "J. Shank", "Shank", "JT Shank", "Justin Shank" — any form.
   const PLAYER_NAME_MATCH = /\bshank\b/i;
-  const PLAYER_LABEL = "J. Shank";   // shown in UI
+  const PLAYER_LABEL = "J. Shank";
   const TEAM_NAME_MATCH = /pacific/i;
-  // Use a wider date window: ESPN scoreboard uses UTC and games can land on
-  // the next day from PT. Cover one extra day on each side as cheap insurance.
   const TOURNAMENT_DATES = ["20260519","20260520","20260521","20260522","20260523","20260524","20260525"];
-  // Try WCC-specific group first (27), then D1-all (50), then no filter.
-  // ESPN's "groups" for college baseball: WCC=27, D1=50 (per ESPN URL paths).
+  
   const SCOREBOARD_VARIANTS = (date) => [
     `https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard?dates=${date}&groups=27&limit=300`,
     `https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard?dates=${date}&groups=50&limit=300`,
     `https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard?dates=${date}&limit=300`
   ];
-  const SUMMARY = (eid) =>
-    `https://site.web.api.espn.com/apis/site/v2/sports/baseball/college-baseball/summary?event=${eid}`;
+  const SUMMARY = (eid) => `https://site.web.api.espn.com/apis/site/v2/sports/baseball/college-baseball/summary?event=${eid}`;
   const POLL_LIVE_MS  = 60_000;
-  const POLL_IDLE_MS  = 5*60_000;
+  const POLL_IDLE_MS  = 5 * 60_000;
 
-  // Storage: real-browser localStorage (with a no-op fallback if disabled).
+  // Cached DOM Elements (Prevents DOM thrashing on every tick)
+  const DOM = {
+    log: document.getElementById("dbgLog"),
+    sync: document.getElementById("lastSync"),
+    liveDot: document.getElementById("liveDot"),
+    gpLabel: document.getElementById("gpLabel"),
+    bracketCards: Array.from(document.querySelectorAll(".game[data-teams]")),
+    statCards: document.querySelectorAll(".stat"),
+    stats: {
+      avg: { val: document.getElementById("val-avg"), sub: document.getElementById("sub-avg"), card: document.getElementById("card-avg") },
+      r:   { val: document.getElementById("val-r"),   card: document.getElementById("card-r") },
+      rbi: { val: document.getElementById("val-rbi"), card: document.getElementById("card-rbi") },
+      hr:  { val: document.getElementById("val-hr"),  card: document.getElementById("card-hr") },
+      obp: { val: document.getElementById("val-obp"), card: document.getElementById("card-obp") },
+      ops: { val: document.getElementById("val-ops"), card: document.getElementById("card-ops") }
+    },
+    manual: {
+      opp: document.getElementById("me-opp"), ab: document.getElementById("me-ab"), h: document.getElementById("me-h"),
+      r: document.getElementById("me-r"), rbi: document.getElementById("me-rbi"), hr: document.getElementById("me-hr"),
+      d2: document.getElementById("me-2b"), d3: document.getElementById("me-3b"), bb: document.getElementById("me-bb"),
+      hbp: document.getElementById("me-hbp"), sf: document.getElementById("me-sf"), save: document.getElementById("me-save"),
+      clear: document.getElementById("me-clear"), resync: document.getElementById("me-resync")
+    }
+  };
+
+  // Storage
   const store = (() => {
     try {
       const k = "__test__";
@@ -438,30 +56,25 @@
   })();
   let games = {};
 
-  // Debug log — visible in the page so we can diagnose without devtools on mobile.
+  // Logging
   const dbg = [];
   function log(line){
     const ts = new Date().toLocaleTimeString([], {hour12:false});
     dbg.push(`[${ts}] ${line}`);
     if (dbg.length > 80) dbg.shift();
-    const el = $("dbgLog");
-    if (el) el.textContent = dbg.join("\n");
+    if (DOM.log) DOM.log.textContent = dbg.join("\n");
   }
 
-  // ---------- helpers ----------
-  const $ = (id) => document.getElementById(id);
-  // Format baseball rate stat. Values < 1.0 drop the leading zero (.333),
-  // values >= 1.0 keep the integer portion (1.667). NaN/Infinity → "---".
   const fmt3 = (n) => {
     if (!isFinite(n)) return "---";
     const s = n.toFixed(3);
     return n < 1 && n >= 0 ? s.slice(1) : s;
   };
+
   const setSync = (msg, cls) => {
-    const el = $("lastSync");
-    if (!el) return;
-    el.textContent = msg;
-    el.className = "sync " + (cls || "");
+    if (!DOM.sync) return;
+    DOM.sync.textContent = msg;
+    DOM.sync.className = "sync " + (cls || "");
   };
 
   async function loadGames(){
@@ -469,129 +82,42 @@
     try {
       const r = await store.get("jt27_games");
       if (r && r.value) games = JSON.parse(r.value);
-    } catch(e){ /* fresh slate */ }
-  }
-  async function saveGames(){
-    if (!store) return;
-    try { await store.set("jt27_games", JSON.stringify(games)); } catch(e){}
+    } catch(e){}
   }
 
-  // Recompute the hero cards from accumulated counters.
+  async function saveGames(){
+    if (store) try { await store.set("jt27_games", JSON.stringify(games)); } catch(e){}
+  }
+
+  // Calculate & Render
   function render(){
-    const totals = Object.values(games).reduce((a,g)=>{
-      ["ab","h","r","rbi","hr","bb","hbp","sf","tb","doubles","triples"].forEach(k=>{
-        a[k] = (a[k]||0) + (g[k]||0);
-      });
+    const totals = Object.values(games).reduce((a, g) => {
+      ["ab","h","r","rbi","hr","bb","hbp","sf","tb"].forEach(k => a[k] = (a[k]||0) + (g[k]||0));
       return a;
     }, {});
-    const ab = totals.ab||0, h = totals.h||0, bb = totals.bb||0, hbp = totals.hbp||0, sf = totals.sf||0;
-    const tb = totals.tb||0;
-    const avg = ab>0 ? h/ab : NaN;
-    const obpDen = ab+bb+hbp+sf;
-    const obp = obpDen>0 ? (h+bb+hbp)/obpDen : NaN;
-    const slg = ab>0 ? tb/ab : NaN;
-    const ops = (isFinite(obp)&&isFinite(slg)) ? (obp+slg) : NaN;
 
-    $("val-avg").textContent = fmt3(avg);
-    $("sub-avg").textContent = `${h} for ${ab}`;
-    $("val-r").textContent   = totals.r||0;
-    $("val-rbi").textContent = totals.rbi||0;
-    $("val-hr").textContent  = totals.hr||0;
-    $("val-obp").textContent = fmt3(obp);
-    $("val-ops").textContent = fmt3(ops);
+    const ab = totals.ab || 0, h = totals.h || 0, bb = totals.bb || 0, hbp = totals.hbp || 0, sf = totals.sf || 0, tb = totals.tb || 0;
+    const avg = ab > 0 ? h / ab : NaN;
+    const obpDen = ab + bb + hbp + sf;
+    const obp = obpDen > 0 ? (h + bb + hbp) / obpDen : NaN;
+    const slg = ab > 0 ? tb / ab : NaN;
+    const ops = (isFinite(obp) && isFinite(slg)) ? (obp + slg) : NaN;
 
-    // mark cards as filled (color from gray → black) once we have any AB
-    const filled = ab > 0;
-    ["avg","r","rbi","hr","obp","ops"].forEach(k=>{
-      $("card-"+k).setAttribute("data-filled", filled ? "true" : "false");
-    });
+    DOM.stats.avg.val.textContent = fmt3(avg);
+    DOM.stats.avg.sub.textContent = `${h} for ${ab}`;
+    DOM.stats.r.val.textContent = totals.r || 0;
+    DOM.stats.rbi.val.textContent = totals.rbi || 0;
+    DOM.stats.hr.val.textContent = totals.hr || 0;
+    DOM.stats.obp.val.textContent = fmt3(obp);
+    DOM.stats.ops.val.textContent = fmt3(ops);
 
-    // GP / through label
-    const played = Object.values(games).filter(g => (g.ab||0)+(g.bb||0)+(g.hbp||0) > 0).length;
-    $("gpLabel").textContent = played;
+    const filled = ab > 0 ? "true" : "false";
+    Object.values(DOM.stats).forEach(stat => stat.card.setAttribute("data-filled", filled));
+
+    DOM.gpLabel.textContent = Object.values(games).filter(g => (g.ab||0) + (g.bb||0) + (g.hbp||0) > 0).length;
   }
 
-  // Parse one ESPN box score for jersey #27 on Pacific.
-  function parseBox(summary, eid){
-    try {
-      const players = summary?.boxscore?.players || [];
-      if (players.length === 0){
-        log(`box ${eid}: no boxscore.players[] (keys: ${Object.keys(summary?.boxscore||{}).join(",")})`);
-        return null;
-      }
-      log(`box ${eid}: ${players.length} team blocks: ${players.map(p=>p?.team?.displayName||p?.team?.name||"?").join(" | ")}`);
-
-      const pacificBlock = players.find(p => TEAM_NAME_MATCH.test(p?.team?.displayName||"") || TEAM_NAME_MATCH.test(p?.team?.name||""));
-      if (!pacificBlock){ log(`box ${eid}: no Pacific team block`); return null; }
-
-      const stats = pacificBlock.statistics || [];
-      log(`box ${eid}: Pacific stat groups: ${stats.map(s=>s.type||s.name||"?").join(",")}`);
-
-      const batting = stats.find(s => {
-        const label = (s.type || s.name || "").toLowerCase();
-        return label === "batting" || label.includes("bat");
-      });
-      if (!batting){ log(`box ${eid}: no batting group`); return null; }
-
-      const keys = (batting.keys||batting.labels||[]).map(k=>String(k).toLowerCase());
-      log(`box ${eid}: batting keys = ${keys.join(",")}`);
-      const athletes = batting.athletes || [];
-      log(`box ${eid}: ${athletes.length} Pacific batters. Names: ${athletes.map(a=>a?.athlete?.displayName||"?").join(" | ")}`);
-
-      const idx = (name) => {
-        const aliases = {
-          ab: ["ab","atbats"],
-          r:  ["r","runs"],
-          h:  ["h","hits"],
-          rbi:["rbi","rbis"],
-          hr: ["hr","homeruns"],
-          bb: ["bb","walks"],
-          hbp:["hbp"],
-          so: ["k","so","strikeouts"],
-          "2b":["2b","doubles"],
-          "3b":["3b","triples"],
-          sf: ["sf","sacflies","sacrificeflies"]
-        };
-        for (const a of aliases[name]||[]) {
-          const i = keys.indexOf(a);
-          if (i >= 0) return i;
-        }
-        return -1;
-      };
-
-      const row = athletes.find(a => PLAYER_NAME_MATCH.test(a?.athlete?.displayName||""));
-      if (!row){ log(`box ${eid}: ${PLAYER_LABEL} not in batting order`); return { found:false }; }
-
-      const sArr = row.stats || [];
-      log(`box ${eid}: #27 = ${row?.athlete?.displayName||"?"} stats=${sArr.join(",")}`);
-      const num = (k) => {
-        const i = idx(k);
-        if (i < 0) return 0;
-        const v = parseInt(sArr[i],10);
-        return isNaN(v) ? 0 : v;
-      };
-
-      const ab  = num("ab");
-      const h   = num("h");
-      const d2  = num("2b");
-      const d3  = num("3b");
-      const hr  = num("hr");
-      const singles = Math.max(0, h - d2 - d3 - hr);
-      const tb  = singles + 2*d2 + 3*d3 + 4*hr;
-
-      return {
-        found: true,
-        name: row?.athlete?.displayName || "JT",
-        ab, h, r:num("r"), rbi:num("rbi"), hr, bb:num("bb"), hbp:num("hbp"), sf:num("sf"),
-        doubles:d2, triples:d3, tb
-      };
-    } catch(e){
-      log(`parseBox ${eid} threw: ${e.message}`);
-      return null;
-    }
-  }
-
-  // Try ESPN direct; fall back through proxies if CORS blocks.
+  // Network Fetching w/ Sequential Fallback
   async function getJSON(url){
     const tries = [
       { label: "espn", u: url },
@@ -609,122 +135,81 @@
     throw lastErr || new Error("all fetches failed");
   }
 
-  // Set of WCC tournament teams (lowercase, for matching). Used to identify
-  // tournament games among the broader D1 scoreboard.
   const WCC_TEAMS = ["pacific","san francisco","saint mary's","saint marys","gonzaga","pepperdine","santa clara"];
   const isWccTeam = (name) => WCC_TEAMS.some(t => name.toLowerCase().includes(t));
 
-  // Find all WCC tournament games on a date. Returns array of events with
-  // both team names + scores + status + isPacific flag.
-  async function findWccEvents(date){
+  async function findWccEventsForDate(date) {
     const variants = SCOREBOARD_VARIANTS(date);
     for (let i = 0; i < variants.length; i++){
-      let sb;
-      try { sb = await getJSON(variants[i]); }
-      catch(e){ log(`scoreboard ${date} variant ${i} failed: ${e.message||e}`); continue; }
-      const events = sb?.events || [];
-      if (events.length === 0){ log(`scoreboard ${date} v${i}: 0 events`); continue; }
+      try {
+        const sb = await getJSON(variants[i]);
+        const events = sb?.events || [];
+        if (!events.length) continue;
 
-      const out = [];
-      for (const ev of events){
-        const comps = ev?.competitions?.[0]?.competitors || [];
-        if (comps.length !== 2) continue;
-        const t1 = comps[0]?.team?.displayName || comps[0]?.team?.name || "";
-        const t2 = comps[1]?.team?.displayName || comps[1]?.team?.name || "";
-        // Both teams must be WCC for this to be a tournament game (vs. a
-        // regular-season WCC vs. non-WCC game). At Scottsdale during the
-        // tournament window, this filter is reliable.
-        if (!isWccTeam(t1) || !isWccTeam(t2)) continue;
-        out.push({
-          id: ev.id,
-          status: ev?.status?.type?.state || "pre",
-          statusDetail: ev?.status?.type?.shortDetail || ev?.status?.type?.description || "",
-          date: ev.date || date,
-          teams: [
-            { name: t1, score: parseInt(comps[0]?.score, 10) },
-            { name: t2, score: parseInt(comps[1]?.score, 10) }
-          ],
-          isPacific: TEAM_NAME_MATCH.test(t1) || TEAM_NAME_MATCH.test(t2),
-          opponent: TEAM_NAME_MATCH.test(t1)
-            ? (comps[1]?.team?.abbreviation || comps[1]?.team?.shortDisplayName || t2)
-            : (comps[0]?.team?.abbreviation || comps[0]?.team?.shortDisplayName || t1)
-        });
-      }
-      if (out.length > 0){
-        log(`scoreboard ${date} v${i}: ${out.length} WCC game(s) [${out.filter(e=>e.isPacific).length} Pacific], eid=${out.map(o=>o.id).join(",")}`);
-        return out;
-      }
+        const out = events.reduce((acc, ev) => {
+          const comps = ev?.competitions?.[0]?.competitors || [];
+          if (comps.length !== 2) return acc;
+
+          const t1 = comps[0]?.team?.displayName || comps[0]?.team?.name || "";
+          const t2 = comps[1]?.team?.displayName || comps[1]?.team?.name || "";
+          
+          if (isWccTeam(t1) && isWccTeam(t2)) {
+            const isPac = TEAM_NAME_MATCH.test(t1) || TEAM_NAME_MATCH.test(t2);
+            acc.push({
+              id: ev.id, status: ev?.status?.type?.state || "pre",
+              teams: [ { name: t1, score: parseInt(comps[0]?.score, 10) }, { name: t2, score: parseInt(comps[1]?.score, 10) } ],
+              isPacific: isPac,
+              opponent: isPac ? (TEAM_NAME_MATCH.test(t1) ? (comps[1]?.team?.abbreviation || t2) : (comps[0]?.team?.abbreviation || t1)) : null
+            });
+          }
+          return acc;
+        }, []);
+
+        if (out.length) return out;
+      } catch(e){ log(`scoreboard ${date} v${i} failed.`); }
     }
     return [];
   }
 
-  // Update bracket game cards with live scores + click-through to ESPN.
-  // Matches cards by data-teams attr (set in HTML) against event's team names.
   function updateBracket(events){
-    if (!events?.length) return;
-    const cards = document.querySelectorAll(".game[data-teams]");
-    cards.forEach(card => {
-      const wanted = card.dataset.teams.toLowerCase().split("|").map(s=>s.trim());
+    if (!events.length) return;
+    
+    DOM.bracketCards.forEach(card => {
+      const wanted = card.dataset.teams.toLowerCase().split("|").map(s => s.trim());
       const match = events.find(ev => {
         const have = ev.teams.map(t => t.name.toLowerCase());
         return wanted.every(w => have.some(h => h.includes(w)));
       });
+      
       if (!match) return;
 
-      // Wire click-through — ESPN auto-routes /game/ to Gamecast/Boxscore by state.
-      const url = `https://www.espn.com/college-baseball/game/_/gameId/${match.id}`;
       card.dataset.eid = match.id;
       card.style.cursor = "pointer";
       card.onclick = (e) => {
-        // ignore clicks on internal anchors/buttons
-        if (e.target.closest("a, button, input")) return;
-        window.open(url, "_blank", "noopener");
+        if (!e.target.closest("a, button, input")) window.open(`https://www.espn.com/college-baseball/game/_/gameId/${match.id}`, "_blank", "noopener");
       };
-      card.title = `Open on ESPN (game ${match.id})`;
 
-      // Update scores for in-progress / final games.
-      const teamRows = card.querySelectorAll(".team");
+      const teamRows = Array.from(card.querySelectorAll(".team"));
       if (teamRows.length === 2 && match.status !== "pre"){
-        // Build a stable name-to-team mapping using strict substring match.
-        // Card row name (e.g. "Santa Clara") must appear in ESPN team name
-        // (e.g. "Santa Clara Broncos") — directional, no reverse partials.
-        // This avoids "Santa Clara" matching "San Francisco" via shared "san".
         const matchTeam = (rowName) => {
-          const n = rowName.toLowerCase().trim();
-          // Try exact substring first
-          let hit = match.teams.find(t => t.name.toLowerCase().includes(n));
-          if (hit) return hit;
-          // Special case "Saint Mary's" ↔ "St. Mary's" / apostrophe variants
-          const stripped = n.replace(/['']/g,"").replace(/\bst\.?\b/g,"saint");
-          hit = match.teams.find(t => {
-            const tn = t.name.toLowerCase().replace(/['']/g,"").replace(/\bst\.?\b/g,"saint");
-            return tn.includes(stripped);
-          });
-          return hit;
+          const n = rowName.toLowerCase().trim().replace(/['']/g,"").replace(/\bst\.?\b/g,"saint");
+          return match.teams.find(t => t.name.toLowerCase().replace(/['']/g,"").replace(/\bst\.?\b/g,"saint").includes(n));
         };
 
         teamRows.forEach(row => {
-          const nm = row.querySelector(".name")?.textContent || "";
-          const matchedTeam = matchTeam(nm);
+          const matchedTeam = matchTeam(row.querySelector(".name")?.textContent || "");
           if (matchedTeam && isFinite(matchedTeam.score)){
             const scoreEl = row.querySelector(".score");
-            if (scoreEl){
-              scoreEl.textContent = matchedTeam.score;
-              scoreEl.classList.remove("dim");
-            }
+            if (scoreEl) { scoreEl.textContent = matchedTeam.score; scoreEl.classList.remove("dim"); }
           }
         });
 
-        // Mark winner / loser if game is final.
         if (match.status === "post"){
           card.classList.remove("pending");
-          const [a,b] = match.teams;
-          const winTeam = a.score > b.score ? a : b;
+          const winTeam = match.teams[0].score > match.teams[1].score ? match.teams[0] : match.teams[1];
           teamRows.forEach(row => {
-            const nm = row.querySelector(".name")?.textContent || "";
-            const matched = matchTeam(nm);
-            const isWinner = matched === winTeam;
-            row.classList.remove("win","loss","tbd");
+            const isWinner = matchTeam(row.querySelector(".name")?.textContent || "") === winTeam;
+            row.classList.remove("win", "loss", "tbd");
             row.classList.add(isWinner ? "win" : "loss");
           });
         }
@@ -732,153 +217,120 @@
     });
   }
 
-  let lastTickHadLive = false;
+  function parseBox(summary, eid){
+    try {
+      const pacificBlock = summary?.boxscore?.players?.find(p => TEAM_NAME_MATCH.test(p?.team?.displayName||"") || TEAM_NAME_MATCH.test(p?.team?.name||""));
+      if (!pacificBlock) return null;
+
+      const batting = pacificBlock.statistics?.find(s => (s.type || s.name || "").toLowerCase().includes("bat"));
+      if (!batting) return null;
+
+      const keys = (batting.keys || batting.labels || []).map(k => String(k).toLowerCase());
+      const row = batting.athletes?.find(a => PLAYER_NAME_MATCH.test(a?.athlete?.displayName || ""));
+      if (!row) return { found: false };
+
+      const num = (aliases) => {
+        const i = keys.findIndex(k => aliases.includes(k));
+        return i >= 0 ? (parseInt(row.stats[i], 10) || 0) : 0;
+      };
+
+      const ab = num(["ab","atbats"]), h = num(["h","hits"]), d2 = num(["2b","doubles"]), d3 = num(["3b","triples"]), hr = num(["hr","homeruns"]);
+      return {
+        found: true, ab, h, r: num(["r","runs"]), rbi: num(["rbi","rbis"]), hr, 
+        bb: num(["bb","walks"]), hbp: num(["hbp"]), sf: num(["sf","sacflies","sacrificeflies"]),
+        tb: Math.max(0, h - d2 - d3 - hr) + 2*d2 + 3*d3 + 4*hr
+      };
+    } catch(e){ log(`parseBox ${eid} threw: ${e.message}`); return null; }
+  }
 
   async function tick(){
-    let anyLive = false;
-    let anyWccLive = false;
-    let totalEvents = 0;
-    let updates = 0;
+    let anyLive = false, updates = 0;
     try {
-      // 1) For each tournament date, find all WCC tournament games.
-      const allWccEvents = [];
-      for (const d of TOURNAMENT_DATES){
-        try {
-          const evs = await findWccEvents(d);
-          allWccEvents.push(...evs);
-        } catch(e){ /* skip date if it fails */ }
-      }
-
-      // 2) Update the bracket display with scores + click-through for every game.
+      // Execute date fetches concurrently
+      const allWccEvents = (await Promise.all(TOURNAMENT_DATES.map(d => findWccEventsForDate(d)))).flat();
       updateBracket(allWccEvents);
 
-      // 3) Filter to Pacific games for stat-card aggregation.
       const allEvents = allWccEvents.filter(e => e.isPacific);
-      totalEvents = allEvents.length;
+      const anyWccLive = allWccEvents.some(e => e.status === "in");
 
-      // Bump polling cadence if ANY WCC game is live (bracket scores still need updating).
-      anyWccLive = allWccEvents.some(e => e.status === "in");
-
-      // For each Pacific event: pull summary if game has started.
       for (const ev of allEvents){
         if (ev.status === "pre") continue;
         if (ev.status === "in") anyLive = true;
 
-        // Skip refresh if game already final and we already have it (immutable)
         const existing = games[ev.id];
+        // Short-circuit: if game is final and already cached, skip network fetch entirely.
         if (ev.status === "post" && existing && existing.status === "post") continue;
 
-        let summary;
-        try { summary = await getJSON(SUMMARY(ev.id)); }
-        catch(e){ log(`summary ${ev.id} failed: ${e.message||e}`); continue; }
+        try {
+          const summary = await getJSON(SUMMARY(ev.id));
+          const parsed = parseBox(summary, ev.id);
+          if (!parsed) continue; 
 
-        const parsed = parseBox(summary, ev.id);
-        if (!parsed) continue; // box not ready yet
-        if (parsed.found === false){
-          // Pacific block found but #27 wasn't in batting order this game.
-          games[ev.id] = { ab:0,h:0,r:0,rbi:0,hr:0,bb:0,hbp:0,sf:0,doubles:0,triples:0,tb:0,
-                           status:ev.status, opponent:ev.opponent, date:ev.date, dnp:true };
-          updates++;
-          continue;
-        }
+          const next = parsed.found 
+            ? { ...parsed, status: ev.status, opponent: ev.opponent }
+            : { ab:0, h:0, r:0, rbi:0, hr:0, bb:0, hbp:0, sf:0, tb:0, status: ev.status, opponent: ev.opponent, dnp: true };
 
-        const next = {
-          ab:parsed.ab, h:parsed.h, r:parsed.r, rbi:parsed.rbi, hr:parsed.hr,
-          bb:parsed.bb, hbp:parsed.hbp, sf:parsed.sf,
-          doubles:parsed.doubles, triples:parsed.triples, tb:parsed.tb,
-          status:ev.status, opponent:ev.opponent, date:ev.date
-        };
-        // Only flash card if numbers actually changed
-        const changed = !existing || JSON.stringify({...existing, status:undefined}) !== JSON.stringify({...next, status:undefined});
-        games[ev.id] = next;
-        if (changed) updates++;
+          // Shallow compare to trigger flash
+          if (!existing || JSON.stringify({ ...existing, status: undefined }) !== JSON.stringify({ ...next, status: undefined })) {
+            games[ev.id] = next;
+            updates++;
+          }
+        } catch(e){ log(`summary ${ev.id} failed.`); }
       }
 
-      await saveGames();
-      render();
-
-      // live indicator
-      $("liveDot").hidden = !anyLive;
-
-      // flash cards if we got fresh data
-      if (updates > 0){
-        document.querySelectorAll(".stat").forEach(s => {
-          s.classList.remove("flash");
-          // force reflow then re-add
-          void s.offsetWidth;
-          s.classList.add("flash");
-        });
+      if (updates > 0) {
+        await saveGames();
+        render();
+        DOM.statCards.forEach(s => { s.classList.remove("flash"); void s.offsetWidth; s.classList.add("flash"); });
       }
 
-      const now = new Date();
-      const t = now.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
-      if (totalEvents === 0){
-        setSync(`no Pacific games found · ${t}`, "");
-      } else if (anyLive){
-        setSync(`live · synced ${t}`, "ok");
-      } else {
-        setSync(`synced ${t}`, "ok");
-      }
-    } catch(e){
-      console.warn("tick failed", e);
+      if (DOM.liveDot) DOM.liveDot.hidden = !anyLive;
+      const t = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      setSync(allEvents.length === 0 ? `no Pacific games found · ${t}` : (anyLive ? `live · synced ${t}` : `synced ${t}`), "ok");
+
+      setTimeout(tick, anyWccLive ? POLL_LIVE_MS : POLL_IDLE_MS);
+
+    } catch(e) {
       setSync("sync error — will retry", "err");
+      setTimeout(tick, POLL_IDLE_MS);
     }
-
-    lastTickHadLive = anyLive;
-    // schedule next — bump cadence if any WCC game is live, not just Pacific
-    const delay = anyWccLive ? POLL_LIVE_MS : POLL_IDLE_MS;
-    setTimeout(tick, delay);
   }
 
-  // ---------- manual override (URL: ?reset=1 to wipe stored data) ----------
-  if (location.search.includes("reset=1") && store){
-    store.set("jt27_games", "{}").then(()=>{ games={}; render(); });
-  }
-
-  // ---------- manual entry wiring ----------
   function wireManualEntry(){
-    const getN = (id) => Math.max(0, parseInt($(id).value,10) || 0);
-    $("me-save")?.addEventListener("click", async () => {
-      const opp = ($("me-opp").value || "manual").trim();
-      const ab = getN("me-ab"), h = getN("me-h"), r = getN("me-r"), rbi = getN("me-rbi");
-      const hr = getN("me-hr"), d2 = getN("me-2b"), d3 = getN("me-3b");
-      const bb = getN("me-bb"), hbp = getN("me-hbp"), sf = getN("me-sf");
-      const singles = Math.max(0, h - d2 - d3 - hr);
-      const tb = singles + 2*d2 + 3*d3 + 4*hr;
-      const key = "manual-" + Date.now();
-      games[key] = { ab,h,r,rbi,hr,bb,hbp,sf,doubles:d2,triples:d3,tb,
-                     status:"post", opponent:opp, date:new Date().toISOString(), manual:true };
+    if (!DOM.manual.save) return;
+    const getN = (input) => Math.max(0, parseInt(input.value, 10) || 0);
+    
+    DOM.manual.save.addEventListener("click", async () => {
+      const opp = (DOM.manual.opp.value || "manual").trim();
+      const ab = getN(DOM.manual.ab), h = getN(DOM.manual.h), d2 = getN(DOM.manual.d2), d3 = getN(DOM.manual.d3), hr = getN(DOM.manual.hr);
+      
+      games["manual-" + Date.now()] = {
+        ab, h, r: getN(DOM.manual.r), rbi: getN(DOM.manual.rbi), hr, bb: getN(DOM.manual.bb), hbp: getN(DOM.manual.hbp), sf: getN(DOM.manual.sf),
+        tb: Math.max(0, h - d2 - d3 - hr) + 2*d2 + 3*d3 + 4*hr, status: "post", opponent: opp, manual: true 
+      };
+      
       await saveGames();
       render();
-      document.querySelectorAll(".stat").forEach(s => { s.classList.remove("flash"); void s.offsetWidth; s.classList.add("flash"); });
-      log(`MANUAL: saved game vs ${opp} (${h}-for-${ab}, ${r}R, ${rbi}RBI)`);
-      // reset inputs
-      ["me-ab","me-h","me-r","me-rbi","me-hr","me-2b","me-3b","me-bb","me-hbp","me-sf"].forEach(id => $(id).value = "0");
-      $("me-opp").value = "";
+      DOM.statCards.forEach(s => { s.classList.remove("flash"); void s.offsetWidth; s.classList.add("flash"); });
+      Object.values(DOM.manual).forEach(el => { if(el.tagName === 'INPUT') el.value = el.type === "text" ? "" : "0"; });
     });
-    $("me-clear")?.addEventListener("click", async () => {
+
+    DOM.manual.clear.addEventListener("click", async () => {
       if (!confirm("Wipe all stored game stats?")) return;
       games = {};
       await saveGames();
       render();
-      log("MANUAL: cleared all games");
     });
-    $("me-resync")?.addEventListener("click", () => {
-      log("MANUAL: resync requested");
-      tick();
-    });
+
+    DOM.manual.resync.addEventListener("click", tick);
   }
 
-  // boot
   document.addEventListener("DOMContentLoaded", async () => {
     wireManualEntry();
     await loadGames();
     render();
     setSync("connecting…", "");
-    log(`boot · matching "${PLAYER_LABEL}" · storage=${store?"on":"off"}`);
     tick();
   });
 })();
 </script>
-</body>
-</html>
