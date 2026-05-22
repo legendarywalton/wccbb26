@@ -59,9 +59,10 @@
   .stat-value .num{color:var(--pending);transition:color .2s}
   .stat[data-filled="true"] .stat-value .num{color:var(--ink)}
   .stat-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dotted var(--rule)}
-  /* live + sync indicators */
-  .live-dot{display:inline-block;margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.18em;color:var(--kop);font-weight:700;animation:pulse 1.6s ease-in-out infinite;vertical-align:middle}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  /* game-card LIVE pill (shown in .game-hd when status=in) */
+  .live-pill{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.16em;color:var(--kop);font-weight:700;text-transform:uppercase;animation:pulse 1.6s ease-in-out infinite}
+  .live-pill::before{content:"●";font-size:10px;line-height:1}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .sync{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:none;letter-spacing:.04em}
   .sync.err{color:var(--kop)}
   .sync.ok{color:var(--win)}
@@ -186,7 +187,7 @@
   <section class="stat-line" aria-label="JT — Tournament running totals">
     <div class="stat-line-hd">
       <div>
-        <div class="sl-kicker">JT Shank · Pacific Tigers <span id="liveDot" class="live-dot" hidden>● LIVE</span></div>
+        <div class="sl-kicker">JT Shank · Pacific Tigers</div>
         <div class="sl-title">Tournament line<span class="dot">.</span></div>
       </div>
       <div class="sl-meta">
@@ -347,8 +348,10 @@
 
       <div class="elim-card" style="margin-top:18px">
         <div class="ehd">Eliminated</div>
-        <div class="elim-row"><span class="nm">Santa Clara</span><span class="sd">6 · L 4–10</span></div>
-        <div class="elim-row"><span class="nm">Pepperdine</span><span class="sd">4 · L 2–9</span></div>
+        <div id="elimList">
+          <div class="elim-row"><span class="nm">Santa Clara</span><span class="sd">6 · L 4–10</span></div>
+          <div class="elim-row"><span class="nm">Pepperdine</span><span class="sd">4 · L 2–9</span></div>
+        </div>
       </div>
     </div>
 
@@ -432,10 +435,10 @@
   const DOM = {
     log: document.getElementById("dbgLog"),
     sync: document.getElementById("lastSync"),
-    liveDot: document.getElementById("liveDot"),
     gpLabel: document.getElementById("gpLabel"),
     bracketCards: Array.from(document.querySelectorAll(".game[data-teams]")),
     statCards: document.querySelectorAll(".stat"),
+    elimList: document.getElementById("elimList"),
     stats: {
       avg: { val: document.getElementById("val-avg"), sub: document.getElementById("sub-avg"), card: document.getElementById("card-avg") },
       r:   { val: document.getElementById("val-r"),   card: document.getElementById("card-r") },
@@ -616,6 +619,27 @@
       };
       card.title = `Open on ESPN (game ${match.id})`;
 
+      // LIVE pill in game-hd when status=in. Replaces the time/channel slot
+      // (the second span) to avoid clutter; restored when game ends.
+      const hd = card.querySelector(".game-hd");
+      if (hd){
+        const spans = hd.querySelectorAll(":scope > span");
+        const timeSlot = spans[1]; // second span = time/channel
+        let pill = hd.querySelector(".live-pill");
+        if (match.status === "in"){
+          if (!pill){
+            pill = document.createElement("span");
+            pill.className = "live-pill";
+            pill.textContent = "LIVE";
+            hd.appendChild(pill);
+          }
+          if (timeSlot && !timeSlot.classList.contains("live-pill")) timeSlot.style.display = "none";
+        } else {
+          if (pill) pill.remove();
+          if (timeSlot) timeSlot.style.display = "";
+        }
+      }
+
       const teamRows = Array.from(card.querySelectorAll(".team"));
       if (teamRows.length === 2 && match.status !== "pre"){
         // Directional name match. Card row name ("Santa Clara") must appear
@@ -652,6 +676,88 @@
         }
       }
     });
+  }
+
+  // ---------- dynamic Eliminated rail ----------
+  // WCC tournament seeds. Used for display + R1 identification.
+  const SEEDS = {
+    "gonzaga": 1, "pacific": 2, "san francisco": 3,
+    "pepperdine": 4, "saint mary's": 5, "saint marys": 5, "santa clara": 6
+  };
+  // Canonical display labels (so we don't show "Saint Marys" without apostrophe)
+  const DISPLAY_NAMES = {
+    "gonzaga": "Gonzaga", "pacific": "Pacific", "san francisco": "San Francisco",
+    "pepperdine": "Pepperdine", "saint mary's": "Saint Mary's", "saint marys": "Saint Mary's",
+    "santa clara": "Santa Clara"
+  };
+  // Map an ESPN team name ("Pacific Tigers") to our canonical key ("pacific").
+  function canonicalKey(espnName){
+    const n = (espnName||"").toLowerCase();
+    // Order matters: check "saint mary" before "mary" wouldn't matter here,
+    // but "san francisco" should beat any partial "san" match.
+    if (n.includes("san francisco")) return "san francisco";
+    if (n.includes("saint mary") || n.includes("st. mary") || n.includes("st mary")) return "saint mary's";
+    if (n.includes("santa clara")) return "santa clara";
+    if (n.includes("pepperdine")) return "pepperdine";
+    if (n.includes("gonzaga")) return "gonzaga";
+    if (n.includes("pacific")) return "pacific";
+    return null;
+  }
+  // Pull MM/DD from ESPN's ISO date (UTC). Tournament window: 20–23 May 2026.
+  // Anything on the 20th is Round 1 → losers are 1-and-done.
+  function isRoundOneDate(isoDate){
+    if (!isoDate) return false;
+    // ESPN dates are UTC; PT games on May 20 evening = May 21 UTC. Check both.
+    // Game 1 (2pm PT May 20) = ~21:00 UTC May 20. Game 2 (7pm PT May 20) = ~02:00 UTC May 21.
+    const d = new Date(isoDate);
+    if (isNaN(d)) return false;
+    // Convert to PT (UTC-7 in May, DST). Take the PT date string.
+    const ptOffsetMs = 7 * 60 * 60 * 1000;
+    const ptDate = new Date(d.getTime() - ptOffsetMs);
+    return ptDate.getUTCFullYear() === 2026 && ptDate.getUTCMonth() === 4 /* May */ && ptDate.getUTCDate() === 20;
+  }
+  function renderElimination(allWccEvents){
+    if (!DOM.elimList) return;
+    // Tally losses by team
+    const losses = {}; // key → [{ score, oppScore, opp, isR1 }]
+    for (const ev of allWccEvents){
+      if (ev.status !== "post") continue;
+      const [a, b] = ev.teams;
+      if (!isFinite(a.score) || !isFinite(b.score)) continue;
+      const aKey = canonicalKey(a.name), bKey = canonicalKey(b.name);
+      if (!aKey || !bKey) continue;
+      const loser = a.score < b.score ? { key:aKey, score:a.score, opp:bKey, oppScore:b.score }
+                                       : { key:bKey, score:b.score, opp:aKey, oppScore:a.score };
+      const isR1 = isRoundOneDate(ev.date);
+      (losses[loser.key] = losses[loser.key] || []).push({
+        score: loser.score, oppScore: loser.oppScore, opp: loser.opp, isR1
+      });
+    }
+    // Apply elimination rule and build rows
+    const eliminated = [];
+    for (const [key, lossList] of Object.entries(losses)){
+      const r1Loss = lossList.some(l => l.isR1);
+      const isOut = r1Loss || lossList.length >= 2;
+      if (!isOut) continue;
+      // Sort losses chronologically isn't strictly knowable from event order;
+      // we'll just show them in the order they appeared (which is date-fetch order).
+      const lossStrs = lossList.map(l => `L ${l.score}–${l.oppScore}`).join(", ");
+      eliminated.push({
+        key, seed: SEEDS[key] || "—",
+        name: DISPLAY_NAMES[key] || key,
+        record: `${SEEDS[key] || "—"} · ${lossStrs}`
+      });
+    }
+    // Sort by seed asc for stable display
+    eliminated.sort((x, y) => (x.seed||99) - (y.seed||99));
+    // Render
+    if (eliminated.length === 0){
+      DOM.elimList.innerHTML = '<div class="elim-row" style="opacity:.55"><span class="nm" style="text-decoration:none">None yet</span><span class="sd">—</span></div>';
+      return;
+    }
+    DOM.elimList.innerHTML = eliminated.map(e =>
+      `<div class="elim-row"><span class="nm">${e.name}</span><span class="sd">${e.record}</span></div>`
+    ).join("");
   }
 
   // ---------- parse one ESPN box score for JT on Pacific ----------
@@ -742,6 +848,9 @@
       // 2) Update bracket cards (scores + click-through) for every WCC game
       updateBracket(allWccEvents);
 
+      // 2b) Update the Eliminated rail based on completed games
+      renderElimination(allWccEvents);
+
       // 3) Filter to Pacific games for stat-card aggregation
       const pacEvents = allWccEvents.filter(e => e.isPacific);
       totalPacEvents = pacEvents.length;
@@ -785,8 +894,6 @@
         // still need to save status changes (pre→in, in→post) silently
         await saveGames();
       }
-
-      if (DOM.liveDot) DOM.liveDot.hidden = !anyLive;
 
       const t = new Date().toLocaleTimeString([], { hour:"numeric", minute:"2-digit" });
       if (totalPacEvents === 0)      setSync(`no Pacific games found · ${t}`, "");
