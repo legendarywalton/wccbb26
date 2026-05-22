@@ -170,7 +170,7 @@
   <section class="stat-line" aria-label="JT — Tournament running totals">
     <div class="stat-line-hd">
       <div>
-        <div class="sl-kicker">JT · #27 · Pacific Tigers <span id="liveDot" class="live-dot" hidden>● LIVE</span></div>
+        <div class="sl-kicker">JT Shank · Pacific Tigers <span id="liveDot" class="live-dot" hidden>● LIVE</span></div>
         <div class="sl-title">Tournament line<span class="dot">.</span></div>
       </div>
       <div class="sl-meta">
@@ -398,8 +398,11 @@
    - Persists per-eventId so reloads/restarts don't double-count
    ===================================================================== */
 (function(){
-  const JERSEY = "27";
-  const TEAM_NAME_MATCH = /pacific/i;        // matches "Pacific" / "Pacific Tigers"
+  // Match by displayName (ESPN doesn't carry jerseys for college baseball).
+  // Pattern matches "J. Shank", "Shank", "JT Shank", "Justin Shank" — any form.
+  const PLAYER_NAME_MATCH = /\bshank\b/i;
+  const PLAYER_LABEL = "J. Shank";   // shown in UI
+  const TEAM_NAME_MATCH = /pacific/i;
   // Use a wider date window: ESPN scoreboard uses UTC and games can land on
   // the next day from PT. Cover one extra day on each side as cheap insurance.
   const TOURNAMENT_DATES = ["20260519","20260520","20260521","20260522","20260523","20260524","20260525"];
@@ -524,14 +527,14 @@
       const keys = (batting.keys||batting.labels||[]).map(k=>String(k).toLowerCase());
       log(`box ${eid}: batting keys = ${keys.join(",")}`);
       const athletes = batting.athletes || [];
-      log(`box ${eid}: ${athletes.length} Pacific batters. Jerseys: ${athletes.map(a=>a?.athlete?.jersey||"?").join(",")}`);
+      log(`box ${eid}: ${athletes.length} Pacific batters. Names: ${athletes.map(a=>a?.athlete?.displayName||"?").join(" | ")}`);
 
       const idx = (name) => {
         const aliases = {
           ab: ["ab","atbats"],
           r:  ["r","runs"],
           h:  ["h","hits"],
-          rbi:["rbi"],
+          rbi:["rbi","rbis"],
           hr: ["hr","homeruns"],
           bb: ["bb","walks"],
           hbp:["hbp"],
@@ -547,8 +550,8 @@
         return -1;
       };
 
-      const row = athletes.find(a => String(a?.athlete?.jersey||"") === JERSEY);
-      if (!row){ log(`box ${eid}: jersey #${JERSEY} not in batting order`); return { found:false }; }
+      const row = athletes.find(a => PLAYER_NAME_MATCH.test(a?.athlete?.displayName||""));
+      if (!row){ log(`box ${eid}: ${PLAYER_LABEL} not in batting order`); return { found:false }; }
 
       const sArr = row.stats || [];
       log(`box ${eid}: #27 = ${row?.athlete?.displayName||"?"} stats=${sArr.join(",")}`);
@@ -770,7 +773,7 @@
     await loadGames();
     render();
     setSync("connecting…", "");
-    log(`boot · jersey #${JERSEY} · storage=${store?"on":"off"}`);
+    log(`boot · matching "${PLAYER_LABEL}" · storage=${store?"on":"off"}`);
     tick();
   });
 })();
