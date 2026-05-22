@@ -26,6 +26,8 @@
   .page{max-width:1280px;margin:0 auto;padding:32px 28px 64px}
   /* masthead */
   .masthead{border-top:6px solid var(--ink);border-bottom:1px solid var(--ink);padding:18px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .title-wrap{display:flex;align-items:center;gap:24px;flex-wrap:nowrap}
+  .wcc-logo{height:clamp(48px,7vw,76px);width:auto;display:block;flex-shrink:0}
   .title{font-family:'DM Serif Display',serif;font-size:clamp(34px,5.4vw,64px);line-height:.95;letter-spacing:-0.01em;margin:0}
   .title .dot{color:var(--pac-orange)}
   .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -152,14 +154,17 @@
 <div class="page">
 
   <header class="masthead">
-    <div>
-      <div class="kicker">2026 West Coast Conference Baseball Championship</div>
-      <h1 class="title">Road to Scottsdale<span class="dot">.</span></h1>
+    <div class="title-wrap">
+      <div>
+        <div class="kicker">2026 West Coast Conference Baseball Championship</div>
+        <h1 class="title">Road to Regionals<span class="dot">.</span></h1>
+      </div>
+      <img class="wcc-logo" src="wcc-logo.png" alt="West Coast Conference">
     </div>
     <div class="meta">
       May 20–23, 2026<br>
       Scottsdale Stadium · Scottsdale, AZ<br>
-      Format: <b>Double elimination</b> · 6 teams
+      Format: <b>First round knockout, double elimination</b> · 6 teams
     </div>
   </header>
 
@@ -183,7 +188,7 @@
     <div class="stat-grid">
       <article class="stat" data-stat="avg" id="card-avg">
         <div class="stat-label">AVG</div>
-        <div class="stat-value">.<span class="num" id="val-avg">---</span></div>
+        <div class="stat-value"><span class="num" id="val-avg">.---</span></div>
         <div class="stat-sub"><span id="sub-avg">— for —</span></div>
       </article>
 
@@ -207,13 +212,13 @@
 
       <article class="stat" data-stat="obp" id="card-obp">
         <div class="stat-label">OBP</div>
-        <div class="stat-value">.<span class="num" id="val-obp">---</span></div>
+        <div class="stat-value"><span class="num" id="val-obp">.---</span></div>
         <div class="stat-sub"><span id="sub-obp">on-base %</span></div>
       </article>
 
       <article class="stat" data-stat="ops" id="card-ops">
         <div class="stat-label">OPS</div>
-        <div class="stat-value">.<span class="num" id="val-ops">---</span></div>
+        <div class="stat-value"><span class="num" id="val-ops">.---</span></div>
         <div class="stat-sub"><span id="sub-ops">OBP + SLG</span></div>
       </article>
     </div>
