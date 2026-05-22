@@ -685,9 +685,27 @@
       // Update scores for in-progress / final games.
       const teamRows = card.querySelectorAll(".team");
       if (teamRows.length === 2 && match.status !== "pre"){
+        // Build a stable name-to-team mapping using strict substring match.
+        // Card row name (e.g. "Santa Clara") must appear in ESPN team name
+        // (e.g. "Santa Clara Broncos") — directional, no reverse partials.
+        // This avoids "Santa Clara" matching "San Francisco" via shared "san".
+        const matchTeam = (rowName) => {
+          const n = rowName.toLowerCase().trim();
+          // Try exact substring first
+          let hit = match.teams.find(t => t.name.toLowerCase().includes(n));
+          if (hit) return hit;
+          // Special case "Saint Mary's" ↔ "St. Mary's" / apostrophe variants
+          const stripped = n.replace(/['']/g,"").replace(/\bst\.?\b/g,"saint");
+          hit = match.teams.find(t => {
+            const tn = t.name.toLowerCase().replace(/['']/g,"").replace(/\bst\.?\b/g,"saint");
+            return tn.includes(stripped);
+          });
+          return hit;
+        };
+
         teamRows.forEach(row => {
-          const nm = row.querySelector(".name")?.textContent?.toLowerCase().trim() || "";
-          const matchedTeam = match.teams.find(t => t.name.toLowerCase().includes(nm) || nm.includes(t.name.toLowerCase().split(" ")[0]));
+          const nm = row.querySelector(".name")?.textContent || "";
+          const matchedTeam = matchTeam(nm);
           if (matchedTeam && isFinite(matchedTeam.score)){
             const scoreEl = row.querySelector(".score");
             if (scoreEl){
@@ -701,10 +719,11 @@
         if (match.status === "post"){
           card.classList.remove("pending");
           const [a,b] = match.teams;
-          const winName = (a.score > b.score ? a.name : b.name).toLowerCase();
+          const winTeam = a.score > b.score ? a : b;
           teamRows.forEach(row => {
-            const nm = row.querySelector(".name")?.textContent?.toLowerCase().trim() || "";
-            const isWinner = winName.includes(nm) || nm.includes(winName.split(" ")[0]);
+            const nm = row.querySelector(".name")?.textContent || "";
+            const matched = matchTeam(nm);
+            const isWinner = matched === winTeam;
             row.classList.remove("win","loss","tbd");
             row.classList.add(isWinner ? "win" : "loss");
           });
