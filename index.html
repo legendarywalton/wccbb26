@@ -235,35 +235,6 @@
     </div>
   </section>
 
-  <details class="debug-panel">
-    <summary>Diagnostics &amp; manual entry</summary>
-    <div class="debug-body">
-      <div class="manual-entry">
-        <div class="me-title">Manual entry — paste JT's box line</div>
-        <div class="me-row">
-          <label>Game vs. <input id="me-opp" type="text" placeholder="USF" maxlength="6"></label>
-          <label>AB <input id="me-ab" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>H <input id="me-h" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>R <input id="me-r" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>RBI <input id="me-rbi" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>HR <input id="me-hr" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>2B <input id="me-2b" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>3B <input id="me-3b" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>BB <input id="me-bb" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>HBP <input id="me-hbp" type="number" min="0" value="0" inputmode="numeric"></label>
-          <label>SF <input id="me-sf" type="number" min="0" value="0" inputmode="numeric"></label>
-        </div>
-        <div class="me-actions">
-          <button id="me-save" type="button">Save game</button>
-          <button id="me-clear" type="button">Reset all</button>
-          <button id="me-resync" type="button">Resync from ESPN</button>
-        </div>
-      </div>
-      <div class="dbg-title">Live sync log (most recent at bottom)</div>
-      <pre id="dbgLog" class="dbg-log">waiting for first sync…</pre>
-    </div>
-  </details>
-
   <div class="legend" aria-label="Legend">
     <span><i class="swatch sw-jt"></i> JT / Pacific</span>
     <span><i class="swatch sw-win"></i> Winner</span>
@@ -402,6 +373,35 @@
     <span>Bracket · 2026 WCC Baseball Championship</span>
     <span>Updated Fri May 22 · pre-Game 5</span>
   </div>
+
+  <details class="debug-panel" style="margin-top:24px">
+    <summary>Diagnostics &amp; manual entry</summary>
+    <div class="debug-body">
+      <div class="manual-entry">
+        <div class="me-title">Manual entry — paste JT's box line</div>
+        <div class="me-row">
+          <label>Game vs. <input id="me-opp" type="text" placeholder="USF" maxlength="6"></label>
+          <label>AB <input id="me-ab" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>H <input id="me-h" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>R <input id="me-r" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>RBI <input id="me-rbi" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>HR <input id="me-hr" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>2B <input id="me-2b" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>3B <input id="me-3b" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>BB <input id="me-bb" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>HBP <input id="me-hbp" type="number" min="0" value="0" inputmode="numeric"></label>
+          <label>SF <input id="me-sf" type="number" min="0" value="0" inputmode="numeric"></label>
+        </div>
+        <div class="me-actions">
+          <button id="me-save" type="button">Save game</button>
+          <button id="me-clear" type="button">Reset all</button>
+          <button id="me-resync" type="button">Resync from ESPN</button>
+        </div>
+      </div>
+      <div class="dbg-title">Live sync log (most recent at bottom)</div>
+      <pre id="dbgLog" class="dbg-log">waiting for first sync…</pre>
+    </div>
+  </details>
 
 </div>
 <script>
