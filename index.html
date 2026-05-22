@@ -94,6 +94,46 @@
   .sw-loss{background:#cfcfca}
   .sw-pending{background:var(--pending)}
   .sw-jt{background:var(--pac-orange)}
+  /* ====== live gamecast panel ====== */
+  .live-panel{margin:0 0 22px;border:1px solid var(--ink);box-shadow:3px 3px 0 var(--ink);background:#fff;overflow:hidden}
+  .live-panel[hidden]{display:none}
+  .live-panel summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:14px;background:var(--ink);color:var(--bone);outline:none;user-select:none}
+  .live-panel summary::-webkit-details-marker{display:none}
+  .live-panel summary::after{content:"▾";margin-left:auto;font-size:14px;color:var(--pac-orange);transition:transform .2s}
+  .live-panel[open] summary::after{transform:rotate(180deg)}
+  .lp-live-tag{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--kop);font-weight:700;text-transform:uppercase;background:#fff;padding:3px 8px;border-radius:0;animation:pulse 1.6s ease-in-out infinite}
+  .lp-live-tag::before{content:"●";font-size:11px;line-height:1}
+  .lp-title{font-family:'DM Serif Display',serif;font-size:18px;letter-spacing:-0.005em;line-height:1.1}
+  .lp-sub{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#bdbdb8;margin-left:6px}
+  .lp-body{padding:18px 16px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+  .lp-scoreboard{display:flex;flex-direction:column;gap:6px}
+  .lp-sb-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--rule);background:#fbfbf7}
+  .lp-sb-row.jt{background:linear-gradient(90deg,rgba(244,122,32,0.10),rgba(244,122,32,0) 70%);border-color:var(--pac-orange)}
+  .lp-sb-team{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px}
+  .lp-sb-team .seed{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);font-weight:600}
+  .lp-sb-score{font-family:'DM Serif Display',serif;font-size:26px;line-height:1;color:var(--ink)}
+  .lp-sb-hits{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.08em;min-width:48px;text-align:right}
+  .lp-state{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);padding:8px 10px;background:#fbfbf7;border:1px dashed var(--rule);margin-top:4px}
+  .lp-state b{color:var(--pac-orange)}
+  .lp-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .lp-block{border:1px solid var(--rule);padding:10px 12px;background:#fbfbf7;min-width:0}
+  .lp-block-hd{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .lp-lastplay{font-size:13.5px;line-height:1.45;color:#2a2a28;word-wrap:break-word}
+  .lp-scoring{font-size:12.5px;line-height:1.45;color:#2a2a28;max-height:120px;overflow:auto}
+  .lp-scoring-row{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:4px 0;border-bottom:1px dotted var(--rule)}
+  .lp-scoring-row:last-child{border-bottom:none}
+  .lp-scoring-inn{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .lp-cta{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--rule);background:#fbfbf7}
+  .lp-btn{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;background:#fff;border:1px solid var(--ink);box-shadow:2px 2px 0 var(--ink);cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .lp-btn:hover{background:var(--pac-orange);color:#fff}
+  .lp-btn:active{transform:translate(2px,2px);box-shadow:none}
+  .lp-btn.primary{background:var(--ink);color:var(--bone)}
+  .lp-btn.primary:hover{background:var(--pac-orange);color:#fff}
+  .lp-empty{padding:18px 16px;font-size:13.5px;color:var(--muted);font-style:italic;text-align:center}
+  @media (max-width: 720px){
+    .lp-body{grid-template-columns:1fr;gap:14px}
+    .lp-title{font-size:16px}
+  }
   /* bracket */
   .bracket{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;align-items:start;position:relative}
   .col-head{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--rule);margin-bottom:14px}
@@ -180,7 +220,7 @@
   <div class="deck">
     <img class="deck-logo" src="pacific-tigers-logo.png" alt="Pacific Tigers">
     <div class="deck-copy">
-      <b>Tracking JT &amp; the Pacific Tigers</b> — No. 2 seed, advanced to the winners' bracket with an 8–4 Game 4 win over San Francisco in part due to a nearly 400 ft. blast by Shank. Pacific clinched 2nd place in the WCC for the first time in more than half a century; first postseason appearance in 28 years. Tigers face No. 5 Saint Mary's today at 2:00 PM PT (Game 6, ESPN+).
+      <b>Tracking JT &amp; the Pacific Tigers</b> — No. 2 seed, advanced to the winners' bracket with an 8–4 Game 4 win over San Francisco. Pacific clinched 2nd place in the WCC for the first time in more than half a century; first postseason appearance in 28 years. Tigers face No. 5 Saint Mary's today at 2:00 PM PT (Game 6, ESPN+).
     </div>
   </div>
 
@@ -192,7 +232,7 @@
       </div>
       <div class="sl-meta">
         Running totals · auto-updates from ESPN<br>
-        Through: <b id="thruLabel">Pre-Game 4</b> · <span id="gpLabel">0</span> GP
+        Through: <b id="thruLabel">tournament start</b> · <span id="gpLabel">0</span> GP
         · <span id="lastSync" class="sync">syncing…</span>
       </div>
     </div>
@@ -242,6 +282,37 @@
     <span><i class="swatch sw-loss"></i> Eliminated</span>
     <span><i class="swatch sw-pending"></i> Pending</span>
   </div>
+
+  <!-- Live gamecast panel — hidden until a WCC game is live -->
+  <details class="live-panel" id="livePanel" hidden>
+    <summary>
+      <span class="lp-live-tag">LIVE</span>
+      <span class="lp-title" id="lp-title">Live game</span>
+      <span class="lp-sub" id="lp-sub"></span>
+    </summary>
+    <div class="lp-body" id="lp-body">
+      <div class="lp-scoreboard" id="lp-scoreboard"></div>
+      <div class="lp-side">
+        <div class="lp-block">
+          <div class="lp-block-hd">Game state</div>
+          <div class="lp-state" id="lp-state">—</div>
+        </div>
+        <div class="lp-block">
+          <div class="lp-block-hd">Last play</div>
+          <div class="lp-lastplay" id="lp-lastplay">—</div>
+        </div>
+        <div class="lp-block">
+          <div class="lp-block-hd">Scoring summary</div>
+          <div class="lp-scoring" id="lp-scoring"><span style="color:var(--muted);font-style:italic">No scoring plays yet</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="lp-cta">
+      <button class="lp-btn primary" id="lp-popout" type="button">📺 Pop out ESPN+ stream</button>
+      <a class="lp-btn" id="lp-gamecast" href="#" target="_blank" rel="noopener">↗ Full Gamecast on ESPN</a>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);align-self:center;margin-left:auto">Updates every 30s · ESPN+ requires sign-in</span>
+    </div>
+  </details>
 
   <section class="bracket" aria-label="Bracket">
 
@@ -428,7 +499,7 @@
     `https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard?dates=${date}&limit=300`
   ];
   const SUMMARY = (eid) => `https://site.web.api.espn.com/apis/site/v2/sports/baseball/college-baseball/summary?event=${eid}`;
-  const POLL_LIVE_MS = 60_000;
+  const POLL_LIVE_MS = 30_000;
   const POLL_IDLE_MS = 5 * 60_000;
 
   // ---------- DOM cache (resolved once at boot) ----------
@@ -436,9 +507,21 @@
     log: document.getElementById("dbgLog"),
     sync: document.getElementById("lastSync"),
     gpLabel: document.getElementById("gpLabel"),
+    thruLabel: document.getElementById("thruLabel"),
     bracketCards: Array.from(document.querySelectorAll(".game[data-teams]")),
     statCards: document.querySelectorAll(".stat"),
     elimList: document.getElementById("elimList"),
+    livePanel: document.getElementById("livePanel"),
+    lp: {
+      title: document.getElementById("lp-title"),
+      sub: document.getElementById("lp-sub"),
+      scoreboard: document.getElementById("lp-scoreboard"),
+      state: document.getElementById("lp-state"),
+      lastplay: document.getElementById("lp-lastplay"),
+      scoring: document.getElementById("lp-scoring"),
+      popout: document.getElementById("lp-popout"),
+      gamecast: document.getElementById("lp-gamecast")
+    },
     stats: {
       avg: { val: document.getElementById("val-avg"), sub: document.getElementById("sub-avg"), card: document.getElementById("card-avg") },
       r:   { val: document.getElementById("val-r"),   card: document.getElementById("card-r") },
@@ -470,6 +553,10 @@
     } catch(e) { return null; }
   })();
   let games = {};
+  // Map of ESPN event id → bracket game number (e.g. "Game 4", "Game 6").
+  // Populated by updateBracket when a card matches an event. Used by render()
+  // to label the "Through:" line.
+  let eventToGameNum = {};
 
   // ---------- diagnostics log (visible in the page) ----------
   const dbg = [];
@@ -532,6 +619,27 @@
     Object.values(DOM.stats).forEach(stat => stat.card.setAttribute("data-filled", filled));
 
     DOM.gpLabel.textContent = Object.values(games).filter(g => (g.ab||0) + (g.bb||0) + (g.hbp||0) > 0).length;
+
+    // "Through:" label — derived from the latest Pacific game we know about.
+    // Picks the most recent by date; uses bracket game number if mapped,
+    // otherwise falls back to chronological position. Status drives the verb.
+    if (DOM.thruLabel){
+      const entries = Object.entries(games)
+        .filter(([k]) => !k.startsWith("manual-"))
+        .sort(([,a],[,b]) => new Date(a.date||0) - new Date(b.date||0));
+      if (entries.length === 0){
+        DOM.thruLabel.textContent = "tournament start";
+      } else {
+        const [eid, last] = entries[entries.length - 1];
+        const gameNum = eventToGameNum[eid];
+        const opp = (last.opponent || "").toUpperCase();
+        const gameLabel = gameNum ? `G${gameNum}` : `game ${entries.length}`;
+        const oppPart = opp ? ` vs ${opp}` : "";
+        if (last.status === "in")        DOM.thruLabel.textContent = `during ${gameLabel}${oppPart}`;
+        else if (last.status === "post") DOM.thruLabel.textContent = `${gameLabel}${oppPart}`;
+        else                              DOM.thruLabel.textContent = "tournament start";
+      }
+    }
   }
 
   // ---------- network: ESPN direct, fall through proxies on CORS ----------
@@ -618,6 +726,11 @@
         window.open(url, "_blank", "noopener");
       };
       card.title = `Open on ESPN (game ${match.id})`;
+
+      // Record event→bracket game number so render() can label "Through: G4 vs USF".
+      const gnumText = card.querySelector(".gnum")?.textContent || "";
+      const gnumMatch = gnumText.match(/Game\s+(\d+)/i);
+      if (gnumMatch) eventToGameNum[match.id] = parseInt(gnumMatch[1], 10);
 
       // LIVE pill in game-hd when status=in. Replaces the time/channel slot
       // (the second span) to avoid clutter; restored when game ends.
@@ -760,6 +873,155 @@
     ).join("");
   }
 
+  // ---------- live gamecast panel ----------
+  // Parse ESPN summary endpoint for live game state. Defensive against
+  // missing fields — every property is optional.
+  function parseLiveState(summary){
+    if (!summary) return null;
+    const comp = summary?.header?.competitions?.[0] || summary?.competitions?.[0];
+    if (!comp) return null;
+    const status = comp?.status?.type?.state || "pre";
+    const inningDetail = comp?.status?.type?.shortDetail || comp?.status?.type?.detail || "";
+
+    // Competitors + linescores
+    const teams = (comp.competitors || []).map(c => {
+      const linescores = c.linescores || [];
+      const hits = parseInt(c?.hits ?? c?.statistics?.find?.(s => /hits|^h$/i.test(s?.name||""))?.displayValue, 10);
+      return {
+        id: c?.team?.id,
+        name: c?.team?.displayName || c?.team?.name || "?",
+        abbrev: c?.team?.abbreviation || "",
+        score: parseInt(c?.score, 10) || 0,
+        hits: isFinite(hits) ? hits : null,
+        homeAway: c?.homeAway,
+        linescores: linescores.map(l => parseInt(l?.value, 10) || 0)
+      };
+    });
+
+    // Situation (balls/strikes/outs, baserunners) — only present mid-game
+    const situation = summary?.situation || {};
+    const balls = situation?.balls, strikes = situation?.strikes, outs = situation?.outs;
+    const onBase = [];
+    if (situation?.onFirst) onBase.push("1B");
+    if (situation?.onSecond) onBase.push("2B");
+    if (situation?.onThird) onBase.push("3B");
+
+    // Last play
+    const lastPlay = summary?.lastPlay?.text || situation?.lastPlay?.text || "";
+
+    // Scoring plays — keep last 8, prepend most recent
+    const scoringRaw = summary?.scoringPlays || summary?.plays?.filter?.(p => p?.scoringPlay) || [];
+    const scoring = scoringRaw.slice(-8).reverse().map(p => ({
+      inning: p?.period?.displayValue || p?.period?.number ? `${p?.period?.type || ""}${p?.period?.number || p?.period?.displayValue || ""}`.trim() : "",
+      text: p?.text || p?.shortText || ""
+    })).filter(s => s.text);
+
+    return { status, inningDetail, teams, balls, strikes, outs, onBase, lastPlay, scoring };
+  }
+
+  // Track which event the panel is currently bound to (so we don't re-render
+  // identical state every tick → avoid flashing the user's scroll position).
+  let livePanelEventId = null;
+
+  function renderLivePanel(allWccEvents, summaryByEventId){
+    if (!DOM.livePanel) return;
+
+    // Pick the live game: prefer Pacific, then any WCC.
+    const liveEvents = allWccEvents.filter(e => e.status === "in");
+    if (liveEvents.length === 0){
+      DOM.livePanel.hidden = true;
+      livePanelEventId = null;
+      return;
+    }
+    const liveEvent = liveEvents.find(e => e.isPacific) || liveEvents[0];
+    const summary = summaryByEventId[liveEvent.id];
+
+    DOM.livePanel.hidden = false;
+
+    // Auto-open if first time we see this game live
+    if (livePanelEventId !== liveEvent.id){
+      DOM.livePanel.open = true;
+      livePanelEventId = liveEvent.id;
+    }
+
+    // Header text
+    const oppName = liveEvent.isPacific
+      ? (liveEvent.teams.find(t => !TEAM_NAME_MATCH.test(t.name))?.name || "opponent")
+      : liveEvent.teams.map(t => t.name).join(" vs ");
+    DOM.lp.title.textContent = liveEvent.isPacific
+      ? `Pacific vs ${oppName.replace(/\s+(Dons|Gaels|Bulldogs|Waves|Broncos|Tigers)$/i,"")}`
+      : oppName;
+
+    const state = parseLiveState(summary);
+
+    if (!state){
+      DOM.lp.sub.textContent = "loading…";
+      DOM.lp.scoreboard.innerHTML = '<div class="lp-empty">Live data loading…</div>';
+      wireLiveButtons(liveEvent.id);
+      return;
+    }
+
+    DOM.lp.sub.textContent = state.inningDetail || "live";
+
+    // Scoreboard rows — sorted to put away on top (ESPN convention)
+    const teamsSorted = [...state.teams].sort((a, b) => (a.homeAway === "away" ? -1 : 1));
+    DOM.lp.scoreboard.innerHTML = teamsSorted.map(t => {
+      const isJtTeam = TEAM_NAME_MATCH.test(t.name);
+      const seedKey = canonicalKey(t.name);
+      const seed = SEEDS[seedKey] || "—";
+      const hitsLabel = t.hits != null ? `${t.hits} H` : "";
+      return `
+        <div class="lp-sb-row ${isJtTeam ? "jt" : ""}">
+          <div class="lp-sb-team"><span class="seed">${seed}</span> ${DISPLAY_NAMES[seedKey] || t.name}</div>
+          <div class="lp-sb-hits">${hitsLabel}</div>
+          <div class="lp-sb-score">${t.score}</div>
+        </div>`;
+    }).join("");
+
+    // Game state line: inning + count + outs + runners
+    const stateParts = [];
+    if (state.inningDetail) stateParts.push(state.inningDetail);
+    if (state.balls != null && state.strikes != null) stateParts.push(`${state.balls}-${state.strikes} count`);
+    if (state.outs != null) stateParts.push(`${state.outs} out${state.outs === 1 ? "" : "s"}`);
+    if (state.onBase.length) stateParts.push(`runners: ${state.onBase.join(", ")}`);
+    DOM.lp.state.innerHTML = stateParts.length
+      ? stateParts.map((p,i) => i === 0 ? `<b>${p}</b>` : p).join(" · ")
+      : "—";
+
+    // Last play
+    DOM.lp.lastplay.textContent = state.lastPlay || "Waiting for next pitch…";
+
+    // Scoring summary
+    if (state.scoring.length === 0){
+      DOM.lp.scoring.innerHTML = '<span style="color:var(--muted);font-style:italic">No scoring plays yet</span>';
+    } else {
+      DOM.lp.scoring.innerHTML = state.scoring.map(s =>
+        `<div class="lp-scoring-row"><span class="lp-scoring-inn">${s.inning}</span><span>${s.text}</span></div>`
+      ).join("");
+    }
+
+    wireLiveButtons(liveEvent.id);
+  }
+
+  // Wire pop-out button and gamecast link for a specific event ID.
+  function wireLiveButtons(eid){
+    if (!DOM.lp.popout || !DOM.lp.gamecast) return;
+    const gamecastUrl = `https://www.espn.com/college-baseball/game/_/gameId/${eid}`;
+    const watchUrl = `https://www.espn.com/watch/player/_/id/${eid}`;
+    DOM.lp.gamecast.href = gamecastUrl;
+    DOM.lp.popout.onclick = () => {
+      // Sized popup window — feels more "embedded" than a new tab.
+      // 16:9 default size, centered on screen.
+      const w = 960, h = 600;
+      const left = (screen.width - w) / 2;
+      const top = (screen.height - h) / 2;
+      const popup = window.open(watchUrl, "espnLive",
+        `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,location=yes`);
+      // Fallback: if popup blocked, open in new tab
+      if (!popup || popup.closed) window.open(watchUrl, "_blank", "noopener");
+    };
+  }
+
   // ---------- parse one ESPN box score for JT on Pacific ----------
   function parseBox(summary, eid){
     try {
@@ -856,6 +1118,10 @@
       totalPacEvents = pacEvents.length;
       anyWccLive = allWccEvents.some(e => e.status === "in");
 
+      // Summaries we fetch this tick — keyed by event ID, used for both the
+      // box-score parse (Pacific only) and the live gamecast panel (any WCC).
+      const summaryByEventId = {};
+
       for (const ev of pacEvents){
         if (ev.status === "pre") continue;
         if (ev.status === "in") anyLive = true;
@@ -867,6 +1133,7 @@
         let summary;
         try { summary = await getJSON(SUMMARY(ev.id)); }
         catch(e){ log(`summary ${ev.id} failed: ${e.message||e}`); continue; }
+        summaryByEventId[ev.id] = summary;
 
         const parsed = parseBox(summary, ev.id);
         if (!parsed) continue; // box not ready
@@ -884,6 +1151,17 @@
         games[ev.id] = next;
         if (changed) updates++;
       }
+
+      // Also fetch summary for any non-Pacific live WCC games (for the live panel)
+      for (const ev of allWccEvents){
+        if (ev.status !== "in" || ev.isPacific) continue; // pacific already fetched
+        if (summaryByEventId[ev.id]) continue;
+        try { summaryByEventId[ev.id] = await getJSON(SUMMARY(ev.id)); }
+        catch(e){ log(`non-pacific summary ${ev.id} failed: ${e.message||e}`); }
+      }
+
+      // 4) Render the live gamecast panel (auto-hides if nothing is live)
+      renderLivePanel(allWccEvents, summaryByEventId);
 
       // Render + flash only if numbers actually moved
       if (updates > 0) {
