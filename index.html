@@ -118,7 +118,7 @@
   .team.win .name{color:var(--win)}
   .team.win .seed{color:var(--win)}
   .team.loss{opacity:.55}
-  .team.loss .name{text-decoration:line-through;text-decoration-color:#bdbdb8;text-decoration-thickness:1px}
+  .team.loss .name{color:#6a6a68}
   .team.tbd .name{color:var(--muted);font-style:italic;font-weight:500}
   .team.tbd .score{color:transparent}
   /* JT highlight */
@@ -179,7 +179,7 @@
   <div class="deck">
     <img class="deck-logo" src="pacific-tigers-logo.png" alt="Pacific Tigers">
     <div class="deck-copy">
-      <b>Tracking JT &amp; the Pacific Tigers</b> — No. 2 seed, first-round bye. Pacific clinched 2nd place in the WCC for the first time in more than half a century; first postseason appearance in 28 years. Tigers open vs. No. 3 San Francisco tonight at 7:00 PM PT (ESPN+).
+      <b>Tracking JT &amp; the Pacific Tigers</b> — No. 2 seed, advanced to the winners' bracket with an 8–4 Game 4 win over San Francisco. Pacific clinched 2nd place in the WCC for the first time in more than half a century; first postseason appearance in 28 years. Tigers face No. 5 Saint Mary's today at 2:00 PM PT (Game 6, ESPN+).
     </div>
   </div>
 
@@ -328,16 +328,17 @@
     <div class="col">
       <div class="col-head"><b>Friday</b> · May 22</div>
 
-      <div class="game pending">
+      <div class="game pending" data-teams="gonzaga|san francisco">
         <div class="game-hd"><span class="gnum">Game 5 · Elim</span><span>10:00 PT · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G3 loser</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G4 loser</div><div class="score">—</div></div>
+        <div class="team"><div class="seed">1</div><div class="name">Gonzaga</div><div class="score dim">—</div></div>
+        <div class="team"><div class="seed">3</div><div class="name">San Francisco</div><div class="score dim">—</div></div>
       </div>
 
-      <div class="game pending">
+      <div class="game pending" data-teams="saint mary's|pacific">
+        <span class="jt-tag">JT</span>
         <div class="game-hd"><span class="gnum">Game 6 · Winners</span><span>2:00 PT · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G3 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G4 winner</div><div class="score">—</div></div>
+        <div class="team"><div class="seed">5</div><div class="name">Saint Mary's</div><div class="score dim">—</div></div>
+        <div class="team jt"><div class="seed">2</div><div class="name">Pacific</div><div class="score dim">—</div></div>
       </div>
 
       <div class="game pending">
@@ -399,7 +400,7 @@
 
   <div class="footer">
     <span>Bracket · 2026 WCC Baseball Championship</span>
-    <span>Updated Thu May 21 · pre-Game 3</span>
+    <span>Updated Fri May 22 · pre-Game 5</span>
   </div>
 
 </div>
