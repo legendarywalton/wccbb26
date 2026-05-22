@@ -97,7 +97,9 @@
   .col.champ{padding-top:88px}
   .col.elim{padding-top:0}
   /* game card */
-  .game{background:#fff;border:1px solid var(--ink);box-shadow:3px 3px 0 var(--ink);position:relative}
+  .game{background:#fff;border:1px solid var(--ink);box-shadow:3px 3px 0 var(--ink);position:relative;transition:transform .12s ease, box-shadow .12s ease}
+  .game[data-eid]:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--pac-orange)}
+  .game[data-eid]:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
   .game.pending{border-color:#9a9a94;box-shadow:3px 3px 0 #cfcfca;background:#fbfbf7}
   .game-hd{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid var(--rule);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   .game-hd .gnum{color:var(--ink);font-weight:600}
@@ -266,7 +268,7 @@
     <div class="col">
       <div class="col-head"><b>Round 1</b> · Wed May 20</div>
 
-      <div class="game">
+      <div class="game" data-teams="santa clara|san francisco">
         <div class="game-hd"><span class="gnum">Game 1</span><span>2:00 PT · ESPN+</span></div>
         <div class="team loss">
           <div class="seed">6</div><div class="name">Santa Clara</div><div class="score">4</div>
@@ -276,7 +278,7 @@
         </div>
       </div>
 
-      <div class="game">
+      <div class="game" data-teams="pepperdine|saint mary's">
         <div class="game-hd"><span class="gnum">Game 2</span><span>7:00 PT · ESPN+</span></div>
         <div class="team loss">
           <div class="seed">4</div><div class="name">Pepperdine</div><div class="score">2</div>
@@ -291,7 +293,7 @@
     <div class="col upper-r2">
       <div class="col-head"><b>Upper R2</b> · Thu May 21</div>
 
-      <div class="game pending">
+      <div class="game pending" data-teams="gonzaga|saint mary's">
         <div class="game-hd"><span class="gnum">Game 3</span><span>2:00 PT · ESPN+</span></div>
         <div class="team">
           <div class="seed">1</div><div class="name">Gonzaga</div><div class="score dim">—</div>
@@ -301,7 +303,7 @@
         </div>
       </div>
 
-      <div class="game pending">
+      <div class="game pending" data-teams="pacific|san francisco">
         <span class="jt-tag">JT</span>
         <div class="game-hd"><span class="gnum">Game 4</span><span>7:00 PT · ESPN+</span></div>
         <div class="team jt">
@@ -448,10 +450,12 @@
 
   // ---------- helpers ----------
   const $ = (id) => document.getElementById(id);
+  // Format baseball rate stat. Values < 1.0 drop the leading zero (.333),
+  // values >= 1.0 keep the integer portion (1.667). NaN/Infinity → "---".
   const fmt3 = (n) => {
     if (!isFinite(n)) return "---";
-    // baseball rate: .XYZ, no leading 0
-    return n.toFixed(3).slice(1).padEnd(3,"0");
+    const s = n.toFixed(3);
+    return n < 1 && n >= 0 ? s.slice(1) : s;
   };
   const setSync = (msg, cls) => {
     const el = $("lastSync");
@@ -605,11 +609,15 @@
     throw lastErr || new Error("all fetches failed");
   }
 
-  // Find Pacific's events on a date. Tries multiple group filters; returns
-  // first non-empty result that contains a Pacific game.
-  async function findPacificEvents(date){
+  // Set of WCC tournament teams (lowercase, for matching). Used to identify
+  // tournament games among the broader D1 scoreboard.
+  const WCC_TEAMS = ["pacific","san francisco","saint mary's","saint marys","gonzaga","pepperdine","santa clara"];
+  const isWccTeam = (name) => WCC_TEAMS.some(t => name.toLowerCase().includes(t));
+
+  // Find all WCC tournament games on a date. Returns array of events with
+  // both team names + scores + status + isPacific flag.
+  async function findWccEvents(date){
     const variants = SCOREBOARD_VARIANTS(date);
-    let lastSeen = [];
     for (let i = 0; i < variants.length; i++){
       let sb;
       try { sb = await getJSON(variants[i]); }
@@ -618,53 +626,123 @@
       if (events.length === 0){ log(`scoreboard ${date} v${i}: 0 events`); continue; }
 
       const out = [];
-      const teamsSeen = [];
       for (const ev of events){
         const comps = ev?.competitions?.[0]?.competitors || [];
-        const names = comps.map(c => c?.team?.displayName || c?.team?.name || c?.team?.location || "?");
-        teamsSeen.push(names.join(" vs "));
-        const blob = names.join(" ");
-        if (!TEAM_NAME_MATCH.test(blob)) continue;
-        const opp = comps.find(c => !TEAM_NAME_MATCH.test(`${c?.team?.displayName||""} ${c?.team?.name||""} ${c?.team?.location||""}`));
+        if (comps.length !== 2) continue;
+        const t1 = comps[0]?.team?.displayName || comps[0]?.team?.name || "";
+        const t2 = comps[1]?.team?.displayName || comps[1]?.team?.name || "";
+        // Both teams must be WCC for this to be a tournament game (vs. a
+        // regular-season WCC vs. non-WCC game). At Scottsdale during the
+        // tournament window, this filter is reliable.
+        if (!isWccTeam(t1) || !isWccTeam(t2)) continue;
         out.push({
           id: ev.id,
           status: ev?.status?.type?.state || "pre",
           statusDetail: ev?.status?.type?.shortDetail || ev?.status?.type?.description || "",
-          opponent: opp?.team?.abbreviation || opp?.team?.shortDisplayName || opp?.team?.displayName || "?",
-          date: ev.date || date
+          date: ev.date || date,
+          teams: [
+            { name: t1, score: parseInt(comps[0]?.score, 10) },
+            { name: t2, score: parseInt(comps[1]?.score, 10) }
+          ],
+          isPacific: TEAM_NAME_MATCH.test(t1) || TEAM_NAME_MATCH.test(t2),
+          opponent: TEAM_NAME_MATCH.test(t1)
+            ? (comps[1]?.team?.abbreviation || comps[1]?.team?.shortDisplayName || t2)
+            : (comps[0]?.team?.abbreviation || comps[0]?.team?.shortDisplayName || t1)
         });
       }
-      lastSeen = teamsSeen;
       if (out.length > 0){
-        log(`scoreboard ${date} v${i}: matched ${out.length} Pacific game(s), eid=${out.map(o=>o.id).join(",")}`);
+        log(`scoreboard ${date} v${i}: ${out.length} WCC game(s) [${out.filter(e=>e.isPacific).length} Pacific], eid=${out.map(o=>o.id).join(",")}`);
         return out;
-      } else {
-        log(`scoreboard ${date} v${i}: ${events.length} events, no Pacific. Sample: ${teamsSeen.slice(0,3).join(" | ")}`);
       }
     }
     return [];
+  }
+
+  // Update bracket game cards with live scores + click-through to ESPN.
+  // Matches cards by data-teams attr (set in HTML) against event's team names.
+  function updateBracket(events){
+    if (!events?.length) return;
+    const cards = document.querySelectorAll(".game[data-teams]");
+    cards.forEach(card => {
+      const wanted = card.dataset.teams.toLowerCase().split("|").map(s=>s.trim());
+      const match = events.find(ev => {
+        const have = ev.teams.map(t => t.name.toLowerCase());
+        return wanted.every(w => have.some(h => h.includes(w)));
+      });
+      if (!match) return;
+
+      // Wire click-through — ESPN auto-routes /game/ to Gamecast/Boxscore by state.
+      const url = `https://www.espn.com/college-baseball/game/_/gameId/${match.id}`;
+      card.dataset.eid = match.id;
+      card.style.cursor = "pointer";
+      card.onclick = (e) => {
+        // ignore clicks on internal anchors/buttons
+        if (e.target.closest("a, button, input")) return;
+        window.open(url, "_blank", "noopener");
+      };
+      card.title = `Open on ESPN (game ${match.id})`;
+
+      // Update scores for in-progress / final games.
+      const teamRows = card.querySelectorAll(".team");
+      if (teamRows.length === 2 && match.status !== "pre"){
+        teamRows.forEach(row => {
+          const nm = row.querySelector(".name")?.textContent?.toLowerCase().trim() || "";
+          const matchedTeam = match.teams.find(t => t.name.toLowerCase().includes(nm) || nm.includes(t.name.toLowerCase().split(" ")[0]));
+          if (matchedTeam && isFinite(matchedTeam.score)){
+            const scoreEl = row.querySelector(".score");
+            if (scoreEl){
+              scoreEl.textContent = matchedTeam.score;
+              scoreEl.classList.remove("dim");
+            }
+          }
+        });
+
+        // Mark winner / loser if game is final.
+        if (match.status === "post"){
+          card.classList.remove("pending");
+          const [a,b] = match.teams;
+          const winName = (a.score > b.score ? a.name : b.name).toLowerCase();
+          teamRows.forEach(row => {
+            const nm = row.querySelector(".name")?.textContent?.toLowerCase().trim() || "";
+            const isWinner = winName.includes(nm) || nm.includes(winName.split(" ")[0]);
+            row.classList.remove("win","loss","tbd");
+            row.classList.add(isWinner ? "win" : "loss");
+          });
+        }
+      }
+    });
   }
 
   let lastTickHadLive = false;
 
   async function tick(){
     let anyLive = false;
+    let anyWccLive = false;
     let totalEvents = 0;
     let updates = 0;
     try {
-      // 1) For each tournament date, find Pacific games
-      const allEvents = [];
+      // 1) For each tournament date, find all WCC tournament games.
+      const allWccEvents = [];
       for (const d of TOURNAMENT_DATES){
         try {
-          const evs = await findPacificEvents(d);
-          allEvents.push(...evs);
+          const evs = await findWccEvents(d);
+          allWccEvents.push(...evs);
         } catch(e){ /* skip date if it fails */ }
       }
+
+      // 2) Update the bracket display with scores + click-through for every game.
+      updateBracket(allWccEvents);
+
+      // 3) Filter to Pacific games for stat-card aggregation.
+      const allEvents = allWccEvents.filter(e => e.isPacific);
       totalEvents = allEvents.length;
 
-      // 2) For each event: pull summary if game has started or is live or final
+      // Bump polling cadence if ANY WCC game is live (bracket scores still need updating).
+      anyWccLive = allWccEvents.some(e => e.status === "in");
+
+      // For each Pacific event: pull summary if game has started.
       for (const ev of allEvents){
-        if (ev.status === "pre") continue; // not started, nothing to read
+        if (ev.status === "pre") continue;
         if (ev.status === "in") anyLive = true;
 
         // Skip refresh if game already final and we already have it (immutable)
@@ -728,8 +806,8 @@
     }
 
     lastTickHadLive = anyLive;
-    // schedule next
-    const delay = anyLive ? POLL_LIVE_MS : POLL_IDLE_MS;
+    // schedule next — bump cadence if any WCC game is live, not just Pacific
+    const delay = anyWccLive ? POLL_LIVE_MS : POLL_IDLE_MS;
     setTimeout(tick, delay);
   }
 
