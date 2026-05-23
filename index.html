@@ -791,6 +791,118 @@
     });
   }
 
+  // ---------- propagate winners/losers into downstream cards ----------
+  // Once Games 5 & 6 finalize, fill in Game 7's two slots (G5 winner, G6 loser).
+  // Once Games 6 & 7 finalize, fill in Game 8's slots (G6 winner, G7 winner).
+  // Once Game 8 finalizes AND was won by the G7 winner (losers' side), fill G9.
+  // Writes data-teams + seed + name + DOM.bracketCards refresh so the next
+  // updateBracket() tick picks up scores from ESPN automatically.
+  function propagateBracket(allWccEvents){
+    // Track which ESPN event IDs have been consumed by upstream slots. Same two
+    // teams can play more than once (G6/G8 are both SMC vs Pacific when Pacific
+    // drops to losers' side and rematches), so we always claim chronologically.
+    const sortedEvents = [...allWccEvents].sort(
+      (a, b) => new Date(a.date||0) - new Date(b.date||0)
+    );
+    const consumed = new Set();
+
+    // Find the earliest completed unconsumed event matching the two keys, claim it.
+    function consumeByKeys(keyA, keyB){
+      const ev = sortedEvents.find(e => {
+        if (e.status !== "post" || consumed.has(e.id)) return false;
+        const k1 = canonicalKey(e.teams[0].name);
+        const k2 = canonicalKey(e.teams[1].name);
+        return (k1 === keyA && k2 === keyB) || (k1 === keyB && k2 === keyA);
+      });
+      if (!ev) return null;
+      consumed.add(ev.id);
+      const [a, b] = ev.teams;
+      if (!isFinite(a.score) || !isFinite(b.score)) return null;
+      const aKey = canonicalKey(a.name), bKey = canonicalKey(b.name);
+      const aSide = { key:aKey, name:DISPLAY_NAMES[aKey]||a.name, seed:SEEDS[aKey], score:a.score };
+      const bSide = { key:bKey, name:DISPLAY_NAMES[bKey]||b.name, seed:SEEDS[bKey], score:b.score };
+      return a.score > b.score ? { winner:aSide, loser:bSide } : { winner:bSide, loser:aSide };
+    }
+
+    // Read participants from a card by its current data-teams (canonical keys).
+    function teamsFromCard(card){
+      const dt = card?.dataset.teams;
+      if (!dt) return null;
+      return dt.toLowerCase().split("|").map(s => s.trim());
+    }
+
+    // Find a game card by its "Game N" header text.
+    function findCard(gameNum){
+      return Array.from(document.querySelectorAll(".game")).find(c => {
+        const t = c.querySelector(".gnum")?.textContent || "";
+        return new RegExp(`\\bGame\\s+${gameNum}\\b`, "i").test(t);
+      }) || null;
+    }
+
+    // Write { seed, name } pairs into a card and set data-teams.
+    function fillCard(card, top, bottom){
+      if (!card) return false;
+      const rows = card.querySelectorAll(".team");
+      if (rows.length !== 2) return false;
+      const writeRow = (row, info) => {
+        row.classList.remove("tbd");
+        const seedEl = row.querySelector(".seed");
+        const nameEl = row.querySelector(".name");
+        if (seedEl) seedEl.textContent = info.seed ?? "—";
+        if (nameEl) nameEl.textContent = info.name;
+      };
+      writeRow(rows[0], top);
+      writeRow(rows[1], bottom);
+      card.dataset.teams = `${top.key}|${bottom.key}`;
+      return true;
+    }
+
+    const g1card = findCard(1), g2card = findCard(2), g3card = findCard(3),
+          g4card = findCard(4), g5card = findCard(5), g6card = findCard(6),
+          g7card = findCard(7), g8card = findCard(8), g9card = findCard(9);
+
+    // Walk G1..G8 in order, consuming events as each is resolved. Order matters
+    // because consumeByKeys is destructive — earlier games claim their event
+    // before downstream games look. G1-G6 already have data-teams set in HTML;
+    // we just need to consume their events to keep the bookkeeping right.
+    const resolveCardEvent = (card) => {
+      const keys = teamsFromCard(card);
+      if (!keys) return null;
+      return consumeByKeys(keys[0], keys[1]);
+    };
+
+    const g1res = resolveCardEvent(g1card);
+    const g2res = resolveCardEvent(g2card);
+    const g3res = resolveCardEvent(g3card);
+    const g4res = resolveCardEvent(g4card);
+    const g5res = resolveCardEvent(g5card);
+    const g6res = resolveCardEvent(g6card);
+
+    let propagated = 0;
+
+    // G7 = G5 winner vs G6 loser
+    if (g7card && !g7card.dataset.teams && g5res && g6res){
+      if (fillCard(g7card, g5res.winner, g6res.loser)) propagated++;
+    }
+    const g7res = resolveCardEvent(g7card);
+
+    // G8 = G6 winner vs G7 winner
+    if (g8card && !g8card.dataset.teams && g6res && g7res){
+      if (fillCard(g8card, g6res.winner, g7res.winner)) propagated++;
+    }
+    const g8res = resolveCardEvent(g8card);
+
+    // G9 needed only if G7 winner (losers' side) beat G6 winner in G8.
+    if (g9card && !g9card.dataset.teams && g7res && g8res && g8res.winner.key === g7res.winner.key){
+      if (fillCard(g9card, g6res.winner, g7res.winner)) propagated++;
+    }
+
+    if (propagated > 0){
+      DOM.bracketCards = Array.from(document.querySelectorAll(".game[data-teams]"));
+      log(`propagated ${propagated} downstream card(s)`);
+    }
+  }
+
   // ---------- dynamic Eliminated rail ----------
   // WCC tournament seeds. Used for display + R1 identification.
   const SEEDS = {
@@ -1107,7 +1219,9 @@
         TOURNAMENT_DATES.map(d => findWccEventsForDate(d).catch(e => { log(`date ${d} threw: ${e.message||e}`); return []; }))
       )).flat();
 
-      // 2) Update bracket cards (scores + click-through) for every WCC game
+      // 2) Propagate downstream winners/losers into G7-G9, then update bracket
+      //    cards (scores + click-through) for every WCC game.
+      propagateBracket(allWccEvents);
       updateBracket(allWccEvents);
 
       // 2b) Update the Eliminated rail based on completed games
