@@ -856,20 +856,29 @@
       }) || null;
     }
 
-    // Write { seed, name } pairs into a card and set data-teams.
-    function fillCard(card, top, bottom){
+    // Write a single slot (top or bottom) on a card. Doesn't set data-teams.
+    // Used for partial fills — e.g., G8 top slot becomes "Saint Mary's" the
+    // moment G6 ends, even before G7 has even started.
+    function fillSlot(card, slotIndex, info){
       if (!card) return false;
       const rows = card.querySelectorAll(".team");
       if (rows.length !== 2) return false;
-      const writeRow = (row, info) => {
-        row.classList.remove("tbd");
-        const seedEl = row.querySelector(".seed");
-        const nameEl = row.querySelector(".name");
-        if (seedEl) seedEl.textContent = info.seed ?? "—";
-        if (nameEl) nameEl.textContent = info.name;
-      };
-      writeRow(rows[0], top);
-      writeRow(rows[1], bottom);
+      const row = rows[slotIndex];
+      const seedEl = row.querySelector(".seed");
+      const nameEl = row.querySelector(".name");
+      if (seedEl) seedEl.textContent = info.seed ?? "—";
+      if (nameEl) nameEl.textContent = info.name;
+      row.classList.remove("tbd");
+      return true;
+    }
+
+    // Write { seed, name } pairs into both slots and set data-teams (which
+    // unlocks the event lookup in updateBracket once both teams are known).
+    function fillCard(card, top, bottom){
+      if (!card) return false;
+      const ok1 = fillSlot(card, 0, top);
+      const ok2 = fillSlot(card, 1, bottom);
+      if (!ok1 || !ok2) return false;
       card.dataset.teams = `${top.key}|${bottom.key}`;
       return true;
     }
@@ -902,20 +911,46 @@
 
     let propagated = 0;
 
-    // G7 = G5 winner vs G6 loser — gate on `finished` so we only fill once both
-    // upstream games are decided. A live G5 or G6 leaves G7 in template state.
-    if (g7card && !g7card.dataset.teams && g5res?.finished && g6res?.finished){
-      if (fillCard(g7card, g5res.winner, g6res.loser)) propagated++;
+    // ---- G7 propagation (G5 winner vs G6 loser) ----
+    // Fill each slot independently as its upstream resolves. Then if both
+    // slots are known, set data-teams so updateBracket can look up its event.
+    if (g7card && !g7card.dataset.teams){
+      const rows = g7card.querySelectorAll(".team");
+      const top = rows[0], bot = rows[1];
+      if (top?.classList.contains("tbd") && g5res?.finished){
+        if (fillSlot(g7card, 0, g5res.winner)) propagated++;
+      }
+      if (bot?.classList.contains("tbd") && g6res?.finished){
+        if (fillSlot(g7card, 1, g6res.loser)) propagated++;
+      }
+      // Both filled? Commit data-teams (canonical-key joined) so the event lookup engages.
+      const topSeed = parseInt(top?.querySelector(".seed")?.textContent, 10);
+      const botSeed = parseInt(bot?.querySelector(".seed")?.textContent, 10);
+      if (isFinite(topSeed) && isFinite(botSeed) && g5res?.finished && g6res?.finished){
+        g7card.dataset.teams = `${g5res.winner.key}|${g6res.loser.key}`;
+      }
     }
     const g7res = resolveCardEvent(g7card);
 
-    // G8 = G6 winner vs G7 winner
-    if (g8card && !g8card.dataset.teams && g6res?.finished && g7res?.finished){
-      if (fillCard(g8card, g6res.winner, g7res.winner)) propagated++;
+    // ---- G8 propagation (G6 winner vs G7 winner) ----
+    // G8's top slot can fill as soon as G6 ends (don't wait for G7).
+    if (g8card && !g8card.dataset.teams){
+      const rows = g8card.querySelectorAll(".team");
+      const top = rows[0], bot = rows[1];
+      if (top?.classList.contains("tbd") && g6res?.finished){
+        if (fillSlot(g8card, 0, g6res.winner)) propagated++;
+      }
+      if (bot?.classList.contains("tbd") && g7res?.finished){
+        if (fillSlot(g8card, 1, g7res.winner)) propagated++;
+      }
+      if (g6res?.finished && g7res?.finished){
+        g8card.dataset.teams = `${g6res.winner.key}|${g7res.winner.key}`;
+      }
     }
     const g8res = resolveCardEvent(g8card);
 
-    // G9 needed only if G7 winner (losers' side) beat G6 winner in G8.
+    // ---- G9 propagation (rematch only if G7 winner won G8) ----
+    // Both slots are the same pair, so this is all-or-nothing on G8 finishing.
     if (g9card && !g9card.dataset.teams && g7res?.finished && g8res?.finished &&
         g8res.winner.key === g7res.winner.key){
       if (fillCard(g9card, g6res.winner, g7res.winner)) propagated++;
