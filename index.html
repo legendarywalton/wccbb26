@@ -900,6 +900,14 @@
     if (propagated > 0){
       DOM.bracketCards = Array.from(document.querySelectorAll(".game[data-teams]"));
       log(`propagated ${propagated} downstream card(s)`);
+    } else {
+      // Diagnostic — only log when something is unresolved that we'd expect to resolve.
+      const g7open = g7card && !g7card.dataset.teams;
+      const g8open = g8card && !g8card.dataset.teams;
+      if (g7open || g8open){
+        const r = (x) => x ? `W=${x.winner.key}/L=${x.loser.key}` : "null";
+        log(`propagate skipped: g5=${r(g5res)} g6=${r(g6res)} g7=${r(g7res)} g8=${r(g8res)} | g7open=${g7open} g8open=${g8open} | events=${sortedEvents.length} consumed=${consumed.size}`);
+      }
     }
   }
 
