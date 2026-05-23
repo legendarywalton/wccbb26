@@ -711,11 +711,21 @@
     if (!events.length) return;
 
     DOM.bracketCards.forEach(card => {
-      const wanted = card.dataset.teams.toLowerCase().split("|").map(s => s.trim());
-      const match = events.find(ev => {
-        const have = ev.teams.map(t => t.name.toLowerCase());
-        return wanted.every(w => have.some(h => h.includes(w)));
-      });
+      // Prefer a pre-assigned event ID stamped by propagateBracket() — this is
+      // the authoritative mapping when the same canonical pair plays more than
+      // once in the bracket (G4 and G7 are both Pacific vs SF). Fall back to
+      // substring team-name match only if no eid is set.
+      let match = null;
+      if (card.dataset.eid){
+        match = events.find(ev => ev.id === card.dataset.eid);
+      }
+      if (!match){
+        const wanted = card.dataset.teams.toLowerCase().split("|").map(s => s.trim());
+        match = events.find(ev => {
+          const have = ev.teams.map(t => t.name.toLowerCase());
+          return wanted.every(w => have.some(h => h.includes(w)));
+        });
+      }
       if (!match) return;
 
       const url = `https://www.espn.com/college-baseball/game/_/gameId/${match.id}`;
@@ -806,10 +816,13 @@
     );
     const consumed = new Set();
 
-    // Find the earliest completed unconsumed event matching the two keys, claim it.
+    // Find the earliest unconsumed event matching the two keys, claim it.
+    // We deliberately do NOT gate on status="post" — a live game IS that bracket
+    // slot's event, even mid-inning. The `consumed` set is what prevents the
+    // same event being claimed by two different slots.
     function consumeByKeys(keyA, keyB){
       const ev = sortedEvents.find(e => {
-        if (e.status !== "post" || consumed.has(e.id)) return false;
+        if (consumed.has(e.id)) return false;
         const k1 = canonicalKey(e.teams[0].name);
         const k2 = canonicalKey(e.teams[1].name);
         return (k1 === keyA && k2 === keyB) || (k1 === keyB && k2 === keyA);
@@ -817,11 +830,15 @@
       if (!ev) return null;
       consumed.add(ev.id);
       const [a, b] = ev.teams;
-      if (!isFinite(a.score) || !isFinite(b.score)) return null;
       const aKey = canonicalKey(a.name), bKey = canonicalKey(b.name);
+      // For pre/in games, scores may be NaN — return participants so we can still
+      // fill downstream card names, just without a winner/loser determination.
       const aSide = { key:aKey, name:DISPLAY_NAMES[aKey]||a.name, seed:SEEDS[aKey], score:a.score };
       const bSide = { key:bKey, name:DISPLAY_NAMES[bKey]||b.name, seed:SEEDS[bKey], score:b.score };
-      return a.score > b.score ? { winner:aSide, loser:bSide } : { winner:bSide, loser:aSide };
+      const finished = ev.status === "post" && isFinite(a.score) && isFinite(b.score);
+      const winner = finished ? (a.score > b.score ? aSide : bSide) : null;
+      const loser  = finished ? (a.score > b.score ? bSide : aSide) : null;
+      return { eid: ev.id, status: ev.status, teams: [aSide, bSide], winner, loser, finished };
     }
 
     // Read participants from a card by its current data-teams (canonical keys).
@@ -863,12 +880,17 @@
 
     // Walk G1..G8 in order, consuming events as each is resolved. Order matters
     // because consumeByKeys is destructive — earlier games claim their event
-    // before downstream games look. G1-G6 already have data-teams set in HTML;
-    // we just need to consume their events to keep the bookkeeping right.
+    // before downstream games look. Side effect: stamp each card's dataset.eid
+    // with its resolved event so updateBracket() can target it directly instead
+    // of falling back to substring team-name match (which would otherwise pick
+    // the wrong event when the same matchup happens twice — e.g. G4 and G7 both
+    // being Pacific vs SF).
     const resolveCardEvent = (card) => {
       const keys = teamsFromCard(card);
       if (!keys) return null;
-      return consumeByKeys(keys[0], keys[1]);
+      const res = consumeByKeys(keys[0], keys[1]);
+      if (res && card) card.dataset.eid = res.eid;
+      return res;
     };
 
     const g1res = resolveCardEvent(g1card);
@@ -880,20 +902,22 @@
 
     let propagated = 0;
 
-    // G7 = G5 winner vs G6 loser
-    if (g7card && !g7card.dataset.teams && g5res && g6res){
+    // G7 = G5 winner vs G6 loser — gate on `finished` so we only fill once both
+    // upstream games are decided. A live G5 or G6 leaves G7 in template state.
+    if (g7card && !g7card.dataset.teams && g5res?.finished && g6res?.finished){
       if (fillCard(g7card, g5res.winner, g6res.loser)) propagated++;
     }
     const g7res = resolveCardEvent(g7card);
 
     // G8 = G6 winner vs G7 winner
-    if (g8card && !g8card.dataset.teams && g6res && g7res){
+    if (g8card && !g8card.dataset.teams && g6res?.finished && g7res?.finished){
       if (fillCard(g8card, g6res.winner, g7res.winner)) propagated++;
     }
     const g8res = resolveCardEvent(g8card);
 
     // G9 needed only if G7 winner (losers' side) beat G6 winner in G8.
-    if (g9card && !g9card.dataset.teams && g7res && g8res && g8res.winner.key === g7res.winner.key){
+    if (g9card && !g9card.dataset.teams && g7res?.finished && g8res?.finished &&
+        g8res.winner.key === g7res.winner.key){
       if (fillCard(g9card, g6res.winner, g7res.winner)) propagated++;
     }
 
