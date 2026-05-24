@@ -169,8 +169,10 @@
   /* champion card */
   .champ-card{background:var(--ink);color:var(--bone);padding:18px 16px;text-align:center;border:1px solid var(--ink);box-shadow:4px 4px 0 var(--pac-orange);position:relative}
   .champ-card .label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#bdbdb8;margin-bottom:10px}
-  .champ-card .trophy{font-family:'DM Serif Display',serif;font-size:38px;line-height:1;margin-bottom:10px;color:var(--pac-orange)}
-  .champ-card .who{font-size:13px;color:#dcdcd6;font-style:italic}
+  .champ-card .trophy{font-family:'DM Serif Display',serif;font-size:38px;line-height:1;margin-bottom:8px;color:var(--pac-orange)}
+  .champ-card .champ-name{font-family:'DM Serif Display',serif;font-size:22px;line-height:1.1;letter-spacing:-0.01em;color:var(--bone);margin-bottom:6px}
+  .champ-card .champ-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--pac-orange);margin-bottom:10px}
+  .champ-card .who{font-size:12.5px;color:#dcdcd6;font-style:italic;padding-top:10px;border-top:1px dotted #3a3a38}
   /* eliminated rail */
   .elim-card{background:#fff;border:1px dashed #b8b8b2;padding:10px 12px}
   .elim-card .ehd{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -220,7 +222,7 @@
   <div class="deck">
     <img class="deck-logo" src="pacific-tigers-logo.png" alt="Pacific Tigers">
     <div class="deck-copy">
-      <b>Tracking JT &amp; the Pacific Tigers</b> — No. 2 seed, advanced to the winners' bracket with an 8–4 Game 4 win over San Francisco. Pacific clinched 2nd place in the WCC for the first time in more than half a century; first postseason appearance in 28 years. Tigers face No. 5 Saint Mary's today at 2:00 PM PT (Game 6, ESPN+).
+      <b>Tracking JT &amp; the Pacific Tigers</b> — Pacific bowed out Friday in the elimination round, dropping G6 to Saint Mary's (10–7) and G7 to San Francisco (10–6) after taking G4 from USF, 8–4. Still: the No. 2 seed marked Pacific's best WCC finish in more than half a century and its first postseason appearance in 28 years. <b>JT slashed .333/.333/.583</b> over three games (4-for-12, 3 R, 3 RBI), including a no-doubt 400+ ft home run. Saint Mary's took the title in nine games to claim the conference's NCAA automatic bid.
     </div>
   </div>
 
@@ -384,10 +386,11 @@
         <div class="team jt"><div class="seed">2</div><div class="name">Pacific</div><div class="score dim">—</div></div>
       </div>
 
-      <div class="game pending">
+      <div class="game pending" data-teams="san francisco|pacific">
+        <span class="jt-tag">JT</span>
         <div class="game-hd"><span class="gnum">Game 7 · Elim</span><span>7:00 PT · ESPN+</span></div>
         <div class="team tbd"><div class="seed">—</div><div class="name">G5 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G6 loser</div><div class="score">—</div></div>
+        <div class="team jt tbd"><div class="seed">—</div><div class="name">G6 loser</div><div class="score">—</div></div>
       </div>
     </div>
 
@@ -401,10 +404,10 @@
         <div class="team tbd"><div class="seed">—</div><div class="name">G7 winner</div><div class="score">—</div></div>
       </div>
 
-      <div class="game pending" style="margin-top:8px">
-        <div class="game-hd"><span class="gnum">Game 9 · If necessary</span><span>TBD · ESPN+</span></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G8 winner</div><div class="score">—</div></div>
-        <div class="team tbd"><div class="seed">—</div><div class="name">G8 loser</div><div class="score">—</div></div>
+      <div class="game" data-teams="saint mary's|san francisco" data-frozen="true" style="margin-top:8px">
+        <div class="game-hd"><span class="gnum">Game 9 · Winner-take-all</span><span>5:15 PT · ESPN+</span></div>
+        <div class="team win"><div class="seed">5</div><div class="name">Saint Mary's</div><div class="score">7</div></div>
+        <div class="team loss"><div class="seed">3</div><div class="name">San Francisco</div><div class="score">6</div></div>
       </div>
     </div>
 
@@ -414,6 +417,8 @@
       <div class="champ-card">
         <div class="label">Tournament Champion</div>
         <div class="trophy">★</div>
+        <div class="champ-name">Saint Mary's</div>
+        <div class="champ-tag">5 seed · back-to-back</div>
         <div class="who">Automatic bid to the 2026 NCAA D-I Tournament</div>
       </div>
 
@@ -435,17 +440,17 @@
     </div>
     <div>
       <h4>Pacific's Path</h4>
-      Win Game 4 → Winners' bracket Friday (G6). Lose Game 4 → drop to elimination side (G5 Friday morning) and must win out. Possible "if necessary" finale Saturday evening.
+      Won G4 over USF (8–4) to advance to the winners' bracket. Dropped G6 to Saint Mary's (10–7) on Friday afternoon, then fell to USF in the elimination game (10–6) Friday night. Out in two losses on the same day.
     </div>
     <div>
-      <h4>JT — Watch list</h4>
-      Starting OF for Pacific. First game tonight, 7:00 PT vs. USF at Scottsdale Stadium. Reception for Pacific community at 6:00 PT per the university.
+      <h4>JT — Final line</h4>
+      Started in OF for all three games. <b>.333/.333/.583</b>, 4-for-12, 1 HR (400+ ft), 3 R, 3 RBI. The home run was a no-doubter; the line travels well into next season.
     </div>
   </section>
 
   <div class="footer">
     <span>Bracket · 2026 WCC Baseball Championship</span>
-    <span>Updated Fri May 22 · pre-Game 5</span>
+    <span>Updated Sat May 23 · Final</span>
   </div>
 
   <details class="debug-panel" style="margin-top:24px">
@@ -711,6 +716,10 @@
     if (!events.length) return;
 
     DOM.bracketCards.forEach(card => {
+      // Skip cards marked data-frozen="true" — these are hardcoded final
+      // results that the script must not overwrite (e.g., G9 when the same
+      // matchup as G8 confuses substring matching).
+      if (card.dataset.frozen === "true") return;
       // Prefer a pre-assigned event ID stamped by propagateBracket() — this is
       // the authoritative mapping when the same canonical pair plays more than
       // once in the bracket (G4 and G7 are both Pacific vs SF). Fall back to
